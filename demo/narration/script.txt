@@ -1,0 +1,66 @@
+# Helios — 3-minute demo narration (DataHacks 2026)
+#
+# Lines starting with `#` or `---` are comments/delimiters.
+# Each segment is bounded by `--- SEGMENT <name> ---` markers so
+# `generate.py` can render per-scene clips for the video editor.
+# Blank lines within a segment are preserved as short pauses in TTS.
+#
+# Timing targets track HELIOS.md §11 (3-min demo script).
+# Words-per-second at natural pace for Rachel ≈ 2.6; timing budget below.
+
+--- SEGMENT 00_hook ---
+# 0:00–0:15 hook (~40 words)
+
+Installing home solar in California has a six to ten year payback. But the math behind that number lives in five different places — your utility's time-of-use plan, NEM 3.0 export rates, installer quotes, financing APRs, system sizing — and none of them talk to each other. So people don't install.
+
+--- SEGMENT 01_mode_a ---
+# 0:15–0:45 Mode A + Orthogonal ticker (~75 words)
+
+Meet Helios. You enter a San Diego address. You tap go. Watch what happens.
+
+Tariff lookup. Weather forecast. Installer pricing. Financing rates. Rebate news. Property value. Demographics. Installer reviews. Carbon pricing. ZenPower permits.
+
+Ten APIs. Firing in parallel. Real endpoints, real latencies, all streaming back in under twenty seconds.
+
+Result: break even in six point eight years. Twenty-five-year net present value: positive forty-eight thousand two hundred dollars. That's eleven percent of your home's value. Twelve point four tons of carbon avoided — worth twenty-one hundred dollars at the current social cost of carbon.
+
+--- SEGMENT 02_orthogonal_pitch ---
+# 0:45–1:00 Orthogonal value prop (~45 words)
+
+Building this integration layer against ten paid APIs the normal way is a week of signups, API key rotation, and billing dashboards. Property data vendors, people data, review scrapers, a carbon price feed, financing lookups. We wrote one SDK integration instead of ten. Orthogonal: metered, pay-per-use, zero keys to manage. This product genuinely could not exist without it.
+
+--- SEGMENT 03_share_extension ---
+# 1:00–1:30 share extension (~70 words)
+
+Quit the app. Open a real PG&E bill in Safari. Tap share. Helios appears in the share sheet — alongside Messages, alongside Mail. Tap it.
+
+The app opens. The bill is parsed automatically. Address pre-filled. Monthly kilowatt-hours detected. ROI recomputes in twenty seconds — and the Orthogonal ticker runs again, ten fresh calls, fresh latencies.
+
+This is an actual iOS share extension. Not a mock. Not a screenshot. Real intent handling.
+
+--- SEGMENT 04_mode_b ---
+# 1:30–2:30 Mode B (~150 words)
+
+Now switch profiles. Tijuana hills, eight kilowatt solar array, Powerwall battery, already installed.
+
+Mode B is live dashboard mode. The arbitrage engine evaluates six possible battery actions every minute, against live CAISO wholesale prices, retail time-of-use rates, and a twenty-four-hour solar forecast.
+
+Current action: charge the battery. Peak export window opens in forty-two minutes. Expected earnings over the next four hours: eighteen dollars and forty cents.
+
+Here's the home-screen widget. Sell now, plus one dollar forty-two per hour. Green dot. Battery state of charge: eighty-seven percent.
+
+A push notification fires ten minutes before any forecasted peak window with an export rate above eighty cents per kilowatt-hour. Tap the notification, deep-link into the hourly plan.
+
+Forecast chart shows the next twenty-four hours — retail and export rates overlaid with predicted solar production. The exact minute-by-minute recommendation is right there.
+
+--- SEGMENT 05_orthogonal_recap ---
+# 2:30–2:45 Orthogonal recap (~35 words)
+
+Everything you just saw — the ROI calculation in Mode A, the live rate feeds and weather forecast in Mode B — eight to ten APIs, one SDK, one bill. That is why we built Helios on Orthogonal.
+
+--- SEGMENT 06_business_close ---
+# 2:45–3:00 business + close (~45 words)
+
+Residential solar customer acquisition cost in California: two to four thousand dollars per household. We are a lead-generation layer for installers at a fraction of that, plus a ten-dollar-per-month SaaS for existing battery owners. One million California homes and growing. Every flipped household: twelve tons of CO2 avoided over twenty-five years.
+
+Helios. DataHacks 2026.

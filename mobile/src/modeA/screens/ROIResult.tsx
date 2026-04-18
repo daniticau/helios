@@ -13,6 +13,7 @@ import { BreakdownCard } from '../components/BreakdownCard';
 import { NPVHeroCard } from '../components/NPVHeroCard';
 import { OrthogonalTicker } from '../components/OrthogonalTicker';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { SpeakResultButton } from '../components/SpeakResultButton';
 import { SystemSizeCard } from '../components/SystemSizeCard';
 import { ZenPowerCredibilityLine } from '../components/ZenPowerCredibilityLine';
 import type { ModeAScreenProps } from '../navigation';
@@ -43,6 +44,10 @@ export function ROIResult({ route, navigation }: ModeAScreenProps<'ROIResult'>) 
           npv25yrUsd={result.npv_25yr_usd}
           annualSavingsYr1={result.annual_savings_yr1_usd}
         />
+
+        <Animated.View entering={FadeInUp.delay(90).duration(420)}>
+          <SpeakResultButton result={result} />
+        </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(120).duration(420)}>
           <SystemSizeCard system={result.recommended_system} />
