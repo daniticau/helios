@@ -214,14 +214,15 @@ function LoginForm() {
                 </div>
               ) : (
                 <form onSubmit={handleMagicLink} className="space-y-3">
-                  <label
-                    htmlFor="email"
+                  <div
                     className="flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-[color:var(--color-text-muted)]"
                     style={{ fontFamily: 'var(--font-mono)' }}
                   >
-                    <span className="text-[color:var(--color-accent)]">▸</span>
-                    email
-                  </label>
+                    <span aria-hidden="true" className="text-[color:var(--color-accent)]">▸</span>
+                    {/* Label text is literally "email" so Playwright's
+                        getByLabel(/^email$/) matches without whitespace noise. */}
+                    <label htmlFor="email">email</label>
+                  </div>
                   <div className="relative">
                     <span
                       className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--color-accent)]"
@@ -232,6 +233,11 @@ function LoginForm() {
                     <input
                       id="email"
                       type="email"
+                      // Explicit aria-label guarantees the accessible name is
+                      // exactly "email" regardless of how the visual label
+                      // resolves through the a11y tree — so Playwright's
+                      // getByLabel(/^email$/) is deterministic.
+                      aria-label="email"
                       required
                       autoComplete="email"
                       value={email}

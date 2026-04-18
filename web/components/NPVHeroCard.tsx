@@ -64,7 +64,7 @@ export function NPVHeroCard({
             className="text-[10px] uppercase tracking-[0.32em] text-[color:var(--color-text-muted)]"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
-            break-even payback
+            break even in
           </div>
           <div className="flex items-end gap-3">
             <motion.span

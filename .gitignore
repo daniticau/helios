@@ -39,6 +39,11 @@ out/
 .vercel/
 *.tsbuildinfo
 
+# Playwright run artifacts
+test-results/
+playwright-report/
+blob-report/
+
 # --- Build artifacts ---
 ios/Pods/
 ios/build/

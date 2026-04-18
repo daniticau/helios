@@ -74,6 +74,12 @@ export function UtilityStep({ initial, onSubmit, onBack }: UtilityStepProps) {
               <button
                 key={u.code}
                 type="button"
+                // aria-label overrides the button's accessible name to the short
+                // utility code — so screen readers announce "SCE" not
+                // "· SCE SCE (Southern California Edison)", and Playwright's
+                // `getByRole('button', { name: /^SCE$/ })` matches cleanly.
+                aria-label={UTILITY_SHORT[u.code]}
+                aria-pressed={active}
                 onClick={() => setUtility(u.code)}
                 className={`group relative overflow-hidden border px-4 py-3.5 text-left transition ${
                   active
@@ -82,12 +88,14 @@ export function UtilityStep({ initial, onSubmit, onBack }: UtilityStepProps) {
                 }`}
               >
                 <div
+                  aria-hidden="true"
                   className="text-[10px] uppercase tracking-[0.26em] text-[color:var(--color-text-dim)]"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   {active ? '▸ selected' : '·'}
                 </div>
                 <div
+                  aria-hidden="true"
                   className={`mt-1.5 text-[17px] font-semibold tracking-tight ${
                     active ? 'text-[color:var(--color-accent)]' : 'text-[color:var(--color-text)]'
                   }`}
@@ -95,7 +103,10 @@ export function UtilityStep({ initial, onSubmit, onBack }: UtilityStepProps) {
                 >
                   {UTILITY_SHORT[u.code]}
                 </div>
-                <div className="mt-1 text-[11px] leading-tight text-[color:var(--color-text-muted)]">
+                <div
+                  aria-hidden="true"
+                  className="mt-1 text-[11px] leading-tight text-[color:var(--color-text-muted)]"
+                >
                   {u.label.replace(/^[A-Z&]+\s*(\(.+?\))?\s*/, '').trim() || u.label}
                 </div>
               </button>
