@@ -1,0 +1,18 @@
+[project]
+name = "helios-analysis"
+version = "0.1.0"
+description = "Reproducible Marimo analysis of the ZenPower permit dataset and Helios NPV model."
+requires-python = ">=3.11"
+dependencies = [
+    "marimo>=0.9",
+    "pandas>=2.2",
+    "numpy>=2.0",
+    "matplotlib>=3.9",
+    "pydantic>=2.9",
+]
+
+[tool.uv]
+# Analysis env is intentionally separate from backend to keep deps lean.
+# We still import from ../backend at runtime via sys.path, so backend
+# does not need to be installed here.
+package = false

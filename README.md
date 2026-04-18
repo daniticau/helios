@@ -51,6 +51,10 @@ helios/
    # scan QR with Expo Go
    ```
 
+## Reproducible analysis
+
+- `analysis/helios_analysis.py` -- a [Marimo](https://marimo.io) reactive notebook with five sections on the ZenPower dataset plus a live NPV sensitivity tool that imports `backend/econ/npv.py` directly. See `analysis/README.md` for details; `analysis/html/helios_analysis.html` is the pre-rendered static export.
+
 ## Contracts
 
 Wire types are defined twice and must stay in sync:
