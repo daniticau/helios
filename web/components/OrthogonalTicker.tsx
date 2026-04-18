@@ -1,9 +1,9 @@
 'use client';
 
-// Web port of mobile/src/modeA/components/OrthogonalTicker.tsx.
-// Renders one row per Orthogonal API with a staggered reveal keyed on the
-// real latency_ms returned by the backend. The pacing is the pitch: judges
-// literally watch 10 paid APIs resolve in parallel in under 20s.
+// Latency-staggered reveal of all 10 Orthogonal calls. Logic preserved from
+// the mobile port — rows sort by real latency, reveal on a delay blended
+// from latency fraction and rank, count-up counter resolves to the real
+// value. Terminal-chrome restyle only.
 
 import { motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -30,7 +30,7 @@ const STATUS_LABEL: Record<OrthogonalStatus, string> = {
 
 const STATUS_COLOR: Record<OrthogonalStatus, string> = {
   success: 'var(--color-success)',
-  cached: 'var(--color-warning)',
+  cached: 'var(--color-accent-cool)',
   error: 'var(--color-error)',
 };
 
@@ -123,7 +123,7 @@ function LatencyCounter({
       return;
     }
     const target = call.latency_ms;
-    const countDuration = 420;
+    const countDuration = 440;
     let startTime: number | null = null;
     const tick = (now: number) => {
       if (startTime === null) startTime = now;
@@ -146,26 +146,30 @@ function LatencyCounter({
   if (!hasData || !call) {
     return (
       <span
-        className={`font-mono text-sm tracking-[0.2em] text-[color:var(--color-text-dim)] ${
+        className={`text-[12.5px] tracking-[0.15em] text-[color:var(--color-text-dim)] ${
           isRunning ? 'caret-blink' : ''
         }`}
+        style={{ fontFamily: 'var(--font-mono)' }}
       >
-        {isRunning ? '...' : '—'}
+        {isRunning ? '· · ·' : '—'}
       </span>
     );
   }
 
   return (
-    <span className="flex items-baseline justify-end gap-1.5">
+    <span className="flex items-baseline justify-end gap-2">
       <span
-        className="font-mono text-[9px] font-semibold tracking-wider"
-        style={{ color: STATUS_COLOR[call.status] }}
+        className="text-[9px] font-semibold uppercase tracking-[0.2em]"
+        style={{ color: STATUS_COLOR[call.status], fontFamily: 'var(--font-mono)' }}
       >
         {STATUS_LABEL[call.status]}
       </span>
-      <span className="font-mono text-sm tabular-nums text-[color:var(--color-text)]">
+      <span
+        className="tabular-nums text-[13px] text-[color:var(--color-text)]"
+        style={{ fontFamily: 'var(--font-mono)' }}
+      >
         {display ?? 0}
-        <span className="font-mono text-xs text-[color:var(--color-text-dim)]">ms</span>
+        <span className="ml-0.5 text-[10.5px] text-[color:var(--color-text-dim)]">ms</span>
       </span>
     </span>
   );
@@ -183,13 +187,19 @@ function StatusDot({
   delayMs: number;
 }) {
   const fill = resolved && status ? STATUS_COLOR[status] : 'var(--color-text-dim)';
+  const glow =
+    resolved && status === 'success'
+      ? '0 0 8px rgba(135,214,125,0.75)'
+      : resolved && status === 'cached'
+        ? '0 0 8px rgba(141,180,220,0.7)'
+        : 'none';
   return (
-    <div className="relative flex h-3.5 w-3.5 items-center justify-center">
+    <div className="relative flex h-4 w-4 items-center justify-center">
       <motion.div
         initial={{ scale: 0.6, opacity: resolved ? 0 : 1 }}
         animate={
           resolved
-            ? { scale: [0.6, 1.3, 1], opacity: 1 }
+            ? { scale: [0.6, 1.25, 1], opacity: 1 }
             : { opacity: isRunning ? [0.35, 1, 0.35] : 1 }
         }
         transition={
@@ -198,14 +208,14 @@ function StatusDot({
             : { repeat: Infinity, duration: 1.4, ease: 'easeInOut' }
         }
         className="h-2 w-2 rounded-full"
-        style={{ backgroundColor: fill }}
+        style={{ backgroundColor: fill, boxShadow: glow }}
       />
       {resolved && status === 'success' && (
         <motion.div
           initial={{ scale: 0.4, opacity: 0 }}
           animate={{ scale: 1, opacity: 0.22 }}
           transition={{ delay: delayMs / 1000 + 0.05, duration: 0.35 }}
-          className="absolute h-3.5 w-3.5 rounded-full"
+          className="absolute h-4 w-4 rounded-full"
           style={{ backgroundColor: fill }}
         />
       )}
@@ -215,11 +225,13 @@ function StatusDot({
 
 function TickerRow({
   slot,
+  index,
   hasData,
   isRunning,
   compact,
 }: {
   slot: SlotState;
+  index: number;
   hasData: boolean;
   isRunning: boolean;
   compact: boolean;
@@ -227,36 +239,51 @@ function TickerRow({
   return (
     <motion.div
       key={slot.key}
-      initial={{ x: 32, opacity: 0 }}
-      animate={hasData ? { x: 0, opacity: 1 } : { x: 0, opacity: 0.7 }}
+      initial={{ x: 36, opacity: 0 }}
+      animate={hasData ? { x: 0, opacity: 1 } : { x: 0, opacity: 0.5 }}
       transition={{
         delay: hasData ? slot.revealDelayMs / 1000 : 0,
-        duration: 0.46,
+        duration: 0.48,
         ease: [0.25, 0.8, 0.25, 1],
       }}
-      className={`flex items-center gap-3 px-1 ${compact ? 'py-1' : 'py-2.5'}`}
+      className={`group grid items-center gap-3 border-b border-[color:var(--color-hairline)] last:border-0 ${
+        compact ? 'grid-cols-[16px_14px_1fr_auto] px-0 py-1' : 'grid-cols-[24px_16px_1fr_auto] px-2 py-3'
+      }`}
     >
+      <span
+        className={`tabular-nums text-[color:var(--color-text-dim)] ${
+          compact ? 'text-[9px]' : 'text-[10px]'
+        }`}
+        style={{ fontFamily: 'var(--font-mono)' }}
+      >
+        {String(index + 1).padStart(2, '0')}
+      </span>
+
       <StatusDot
         resolved={hasData}
         status={slot.call?.status ?? null}
         isRunning={isRunning}
         delayMs={slot.revealDelayMs}
       />
-      <div className="min-w-0 flex-1">
+
+      <div className="min-w-0">
         <div
-          className={`font-mono ${
-            compact ? 'text-xs text-[color:var(--color-text-muted)]' : 'text-sm text-[color:var(--color-text)]'
-          }`}
+          className={`${compact ? 'text-[12px]' : 'text-[13.5px]'} text-[color:var(--color-text)]`}
+          style={{ fontFamily: 'var(--font-mono)' }}
         >
           {slot.api}
         </div>
         {!compact && (
-          <div className="mt-0.5 font-mono text-[11px] text-[color:var(--color-text-dim)]">
+          <div
+            className="mt-0.5 text-[11px] text-[color:var(--color-text-dim)]"
+            style={{ fontFamily: 'var(--font-mono)' }}
+          >
             {slot.purpose}
           </div>
         )}
       </div>
-      <div className="min-w-[78px] text-right">
+
+      <div className="min-w-[84px] text-right">
         <LatencyCounter
           call={slot.call}
           revealDelayMs={slot.revealDelayMs}
@@ -268,7 +295,7 @@ function TickerRow({
   );
 }
 
-function TickerSummary({
+function TickerHeader({
   calls,
   isRunning,
 }: {
@@ -288,32 +315,33 @@ function TickerSummary({
   }, [calls]);
   const total = EXPECTED_SLOTS.length;
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-[color:var(--color-border)] pb-2 mb-2">
-      <div className="flex items-center gap-1.5">
-        <span className="font-mono text-xs tracking-wider text-[color:var(--color-accent)]">
-          orthogonal &gt;
-        </span>
-        <span className="font-mono text-xs text-[color:var(--color-text-muted)]">
-          {isRunning ? 'fan-out in flight' : 'fan-out complete'}
-        </span>
+    <div
+      className="flex items-center justify-between gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/40 px-4 py-2.5 text-[10px] uppercase tracking-[0.24em] text-[color:var(--color-text-muted)]"
+      style={{ fontFamily: 'var(--font-mono)' }}
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-[color:var(--color-accent)]">orthogonal &gt;</span>
+        <span>{isRunning ? 'fan-out in flight' : 'fan-out complete'}</span>
         {isRunning && (
-          <span className="caret-blink font-mono text-xs text-[color:var(--color-accent)]">▌</span>
+          <span className="caret-blink text-[color:var(--color-accent)]">▌</span>
         )}
       </div>
-      <div className="font-mono text-xs text-[color:var(--color-text-muted)]">
+      <div>
         <span className="text-[color:var(--color-text)]">
           {stats.resolved}/{total}
         </span>
         {stats.fastest != null && (
           <>
-            {'  ·  '}
-            <span className="text-[color:var(--color-text)]">{stats.fastest}ms</span> min
+            <span className="mx-2 text-[color:var(--color-text-dimmer)]">·</span>
+            <span className="text-[color:var(--color-text)]">{stats.fastest}ms</span>{' '}
+            min
           </>
         )}
         {stats.slowest != null && (
           <>
-            {'  ·  '}
-            <span className="text-[color:var(--color-text)]">{stats.slowest}ms</span> max
+            <span className="mx-2 text-[color:var(--color-text-dimmer)]">·</span>
+            <span className="text-[color:var(--color-text)]">{stats.slowest}ms</span>{' '}
+            max
           </>
         )}
       </div>
@@ -329,25 +357,46 @@ export function OrthogonalTicker({
   const slots = useMemo(() => buildSlots(calls), [calls]);
   const hasAnyData = calls.length > 0;
 
-  return (
-    <div
-      className={
-        compact
-          ? ''
-          : 'rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-card)] p-4'
-      }
-    >
-      {!compact && <TickerSummary calls={calls} isRunning={isRunning} />}
-      <div className={compact ? 'space-y-0' : 'space-y-0'}>
-        {slots.map((slot) => (
+  if (compact) {
+    return (
+      <div className="space-y-0">
+        {slots.map((slot, i) => (
           <TickerRow
             key={slot.key}
             slot={slot}
+            index={i}
             hasData={hasAnyData && slot.call !== null}
             isRunning={isRunning}
-            compact={compact}
+            compact
           />
         ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card)]/70 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)]">
+      <TickerHeader calls={calls} isRunning={isRunning} />
+      <div className="px-2 py-1">
+        {slots.map((slot, i) => (
+          <TickerRow
+            key={slot.key}
+            slot={slot}
+            index={i}
+            hasData={hasAnyData && slot.call !== null}
+            isRunning={isRunning}
+            compact={false}
+          />
+        ))}
+      </div>
+      <div
+        className="flex items-center justify-between border-t border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/40 px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-[color:var(--color-text-dim)]"
+        style={{ fontFamily: 'var(--font-mono)' }}
+      >
+        <span>$ helios fanout --live</span>
+        <span>
+          <span className="text-[color:var(--color-accent)]">·</span> streaming real latencies
+        </span>
       </div>
     </div>
   );

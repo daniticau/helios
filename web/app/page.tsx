@@ -1,111 +1,196 @@
-// Landing page. Server component (static) with client components embedded.
-// Hero tagline + "10 APIs, 1 SDK" pitch + animated ticker visualization
-// that loops on CSS keyframes. No fetch on render.
+// Landing page. Solar observation terminal aesthetic — oversized variable
+// serif hero number, live Orthogonal instrument panel as the centerpiece,
+// editorial pitch sections, and a dossier-style methods block.
 
 import Link from 'next/link';
 import { Header } from '@/components/Header';
+import { SiteFooter } from '@/components/SiteFooter';
 
 const LANDING_APIS = [
-  { name: 'tariff', latency: 612 },
-  { name: 'weather', latency: 428 },
-  { name: 'pricing', latency: 1340 },
-  { name: 'finance', latency: 806 },
-  { name: 'news', latency: 1960 },
-  { name: 'permits', latency: 14 },
-  { name: 'property_value', latency: 1132 },
-  { name: 'demographics', latency: 774 },
-  { name: 'reviews', latency: 1542 },
-  { name: 'carbon_price', latency: 518 },
+  { name: 'tariff', latency: 612, purpose: 'time-of-use plan resolution', partner: 'scrapegraph' },
+  { name: 'weather', latency: 428, purpose: 'irradiance · 24h forecast', partner: 'precip.ai' },
+  { name: 'pricing', latency: 1340, purpose: 'installer $/W quotes', partner: 'scrapegraph' },
+  { name: 'finance', latency: 806, purpose: 'solar loan APR range', partner: 'linkup' },
+  { name: 'news', latency: 1960, purpose: 'active rebates · NEM 3.0', partner: 'linkup' },
+  { name: 'permits', latency: 14, purpose: 'zenpower permit records', partner: 'local index' },
+  { name: 'property_value', latency: 1132, purpose: 'home value · ROI %', partner: 'aviato' },
+  { name: 'demographics', latency: 774, purpose: 'income-aware sizing', partner: 'pdl' },
+  { name: 'reviews', latency: 1542, purpose: 'yelp · energysage signal', partner: 'scrapegraph' },
+  { name: 'carbon_price', latency: 518, purpose: 'social cost of carbon', partner: 'linkup' },
 ];
 
 export default function LandingPage() {
-  // Longest latency in the set, used to normalize bar widths in the hero viz.
   const maxLatency = Math.max(...LANDING_APIS.map((a) => a.latency));
+  const totalMs = LANDING_APIS.reduce((a, b) => Math.max(a, b.latency), 0);
 
   return (
-    <div className="min-h-screen bg-[color:var(--color-bg)]">
+    <div className="min-h-screen">
       <Header />
 
-      <main className="mx-auto max-w-6xl px-6">
+      <main className="mx-auto max-w-[1280px] px-6">
         {/* HERO */}
-        <section className="grid gap-12 py-14 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:gap-16 lg:py-32">
-          <div className="space-y-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-card)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.3em] text-[color:var(--color-accent)]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-accent)]" />
-              datahacks 2026 · orthogonal
-            </div>
-
-            <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-[color:var(--color-text)] sm:text-5xl md:text-6xl">
-              Solar economics,
-              <br />
-              <span className="text-[color:var(--color-accent)]">in 20 seconds.</span>
-            </h1>
-
-            <p className="max-w-xl text-base leading-relaxed text-[color:var(--color-text-muted)] sm:text-lg">
-              Enter an address. Get a 25-year NPV, payback period, and recommended
-              system. Helios fans out <b className="text-[color:var(--color-text)]">10 paid APIs</b> in
-              parallel through <b className="text-[color:var(--color-text)]">one Orthogonal SDK</b> —
-              tariffs, weather, permits, pricing, financing, news, property value,
-              demographics, reviews, carbon price.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Link
-                href="/install"
-                className="rounded-xl bg-[color:var(--color-accent)] px-6 py-3.5 text-base font-semibold text-[color:var(--color-bg)] transition hover:brightness-105"
-              >
-                run it on your address →
-              </Link>
-              <a
-                href="https://github.com/daniticau/helios"
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-card)] px-6 py-3.5 text-base font-semibold text-[color:var(--color-text)] hover:border-[color:var(--color-text-muted)]"
-              >
-                view source
-              </a>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4 pt-6 text-sm">
-              <StatBlock value="10" label="paid APIs" />
-              <StatBlock value="1" label="SDK" accent />
-              <StatBlock value="<20s" label="end to end" />
-            </div>
+        <section className="relative pt-12 pb-10 sm:pt-20 lg:pt-28">
+          {/* top coordinate line */}
+          <div
+            className="flex items-center justify-between border-b border-[color:var(--color-hairline)] pb-3 text-[10px] uppercase tracking-[0.3em] text-[color:var(--color-text-dim)]"
+            style={{ fontFamily: 'var(--font-mono)' }}
+          >
+            <span>
+              // mission <span className="text-[color:var(--color-text-muted)]">helios</span>
+            </span>
+            <span className="hidden sm:inline">
+              mode A · install decision
+            </span>
+            <span>
+              rev <span className="text-[color:var(--color-accent)]">0.1.0</span>
+            </span>
           </div>
 
-          {/* Orthogonal ticker viz — static SVG + CSS animated bars. */}
-          <TickerViz apis={LANDING_APIS} maxLatency={maxLatency} />
+          <div className="grid gap-10 pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,620px)] lg:gap-16 lg:pt-16">
+            {/* LEFT — editorial hero */}
+            <div className="space-y-9">
+              <div className="space-y-4">
+                <div
+                  className="text-[10.5px] uppercase tracking-[0.35em] text-[color:var(--color-text-muted)]"
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                >
+                  · solar · net present value · 25yr
+                </div>
+                <h1
+                  className="type-display text-[color:var(--color-text)]"
+                  style={{
+                    fontSize: 'clamp(52px, 8vw, 112px)',
+                    lineHeight: 0.92,
+                    letterSpacing: '-0.035em',
+                  }}
+                >
+                  Home solar,<br />
+                  <span
+                    className="type-display-italic text-[color:var(--color-accent)]"
+                    style={{ fontWeight: 500 }}
+                  >
+                    calculated
+                  </span>
+                  <br />
+                  in twenty seconds.
+                </h1>
+              </div>
+
+              <p
+                className="max-w-[36rem] text-[17px] leading-[1.65] text-[color:var(--color-text-muted)]"
+              >
+                Enter an address. Helios fans out{' '}
+                <span className="text-[color:var(--color-text)]">ten paid APIs</span>{' '}
+                in parallel through{' '}
+                <span className="text-[color:var(--color-accent)]">a single Orthogonal SDK</span>
+                {' '}— tariff, weather, permits, installer pricing, financing, news,
+                property value, demographics, reviews, carbon price — and returns a
+                25-year net present value, payback period, and recommended system.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-4 pt-1">
+                <Link
+                  href="/install"
+                  className="group relative inline-flex items-center gap-3 overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-7 py-4 text-[13.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-bg)] transition"
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                >
+                  <span className="relative z-10">run on your address</span>
+                  <span className="relative z-10 text-base">→</span>
+                  <span className="absolute inset-0 -translate-x-full bg-[color:var(--color-accent-warm)] transition-transform duration-500 group-hover:translate-x-0" />
+                </Link>
+                <a
+                  href="https://github.com/daniticau/helios"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11.5px] uppercase tracking-[0.28em] text-[color:var(--color-text-muted)] hover:text-[color:var(--color-accent)]"
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                >
+                  ↗ view source
+                </a>
+              </div>
+
+              {/* meta strip */}
+              <div
+                className="grid max-w-xl grid-cols-3 gap-6 border-t border-[color:var(--color-hairline)] pt-7"
+                style={{ fontFamily: 'var(--font-mono)' }}
+              >
+                <MetaStat value="10" label="paid APIs" />
+                <MetaStat value="1" label="SDK integration" accent />
+                <MetaStat value="<20s" label="end to end" />
+              </div>
+            </div>
+
+            {/* RIGHT — instrument panel */}
+            <div className="relative self-start">
+              <InstrumentPanel apis={LANDING_APIS} maxLatency={maxLatency} totalMs={totalMs} />
+            </div>
+          </div>
         </section>
 
-        {/* PITCH BAND */}
-        <section className="border-y border-[color:var(--color-border)] py-16">
-          <div className="grid gap-10 md:grid-cols-2">
-            <div className="space-y-4">
-              <div className="font-mono text-[11px] uppercase tracking-[0.3em] text-[color:var(--color-accent)]">
-                the pitch
-              </div>
-              <h2 className="text-3xl font-bold tracking-tight text-[color:var(--color-text)] sm:text-4xl">
-                Building this the normal way is a week.
-              </h2>
-              <p className="text-base leading-relaxed text-[color:var(--color-text-muted)]">
-                Ten API signups, ten API keys, ten billing dashboards, ten response
-                shapes. We wrote one SDK integration. Orthogonal is metered pay-per-use,
-                zero key management, zero billing setup. The product didn&apos;t exist
-                last quarter.
-              </p>
+        {/* DIVIDER STRIP — ticker */}
+        <div className="relative my-14 overflow-hidden border-y border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/40 py-4">
+          <MarqueeStrip />
+        </div>
+
+        {/* EDITORIAL PITCH */}
+        <section className="grid gap-10 py-14 lg:grid-cols-[1fr_minmax(0,1.2fr)] lg:gap-20 lg:py-24">
+          <div className="space-y-5 lg:pt-6">
+            <div
+              className="text-[10.5px] uppercase tracking-[0.35em] text-[color:var(--color-accent)]"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            >
+              // the pitch
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {LANDING_APIS.map((a) => (
+            <h2
+              className="type-display-soft text-[color:var(--color-text)]"
+              style={{
+                fontSize: 'clamp(36px, 4.6vw, 68px)',
+                lineHeight: 1.02,
+                letterSpacing: '-0.03em',
+              }}
+            >
+              Normally this integration layer is{' '}
+              <span className="type-display-italic text-[color:var(--color-accent-warm)]">
+                a week of work.
+              </span>
+            </h2>
+            <p className="text-[16.5px] leading-[1.65] text-[color:var(--color-text-muted)]">
+              Ten API signups. Ten billing dashboards. Ten response shapes to
+              normalize. Ten keys to rotate. We did it with{' '}
+              <span className="text-[color:var(--color-text)]">one SDK integration</span>
+              {' '}and a single Orthogonal bill. Metered pay-per-use, zero key
+              management, zero onboarding. The product genuinely did not exist
+              last quarter.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div
+              className="flex items-center justify-between border-b border-[color:var(--color-border)] pb-2 text-[10px] uppercase tracking-[0.3em] text-[color:var(--color-text-dim)]"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            >
+              <span>▸ partner manifest</span>
+              <span>10 / 10 · live</span>
+            </div>
+            <div className="grid gap-1.5 sm:grid-cols-2">
+              {LANDING_APIS.map((a, i) => (
                 <div
                   key={a.name}
-                  className="flex items-center justify-between rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-card)] px-3 py-2.5"
+                  className="group relative flex items-center justify-between gap-3 border-l border-[color:var(--color-hairline)] bg-[color:var(--color-card)]/40 px-3 py-2.5 transition hover:border-[color:var(--color-accent)] hover:bg-[color:var(--color-card)]"
+                  style={{ fontFamily: 'var(--font-mono)' }}
                 >
-                  <span className="font-mono text-xs text-[color:var(--color-text)]">
-                    {a.name}
-                  </span>
-                  <span className="font-mono text-[10px] text-[color:var(--color-text-dim)]">
-                    {a.latency}ms
-                  </span>
+                  <div className="flex items-center gap-3 text-[11.5px]">
+                    <span className="w-5 text-[10px] text-[color:var(--color-text-dim)] tabular-nums">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-[color:var(--color-text)]">{a.name}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-[10px] text-[color:var(--color-text-dim)]">
+                    <span className="hidden sm:inline">{a.partner}</span>
+                    <span className="tabular-nums text-[color:var(--color-accent)]/80">
+                      {a.latency}ms
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -113,54 +198,91 @@ export default function LandingPage() {
         </section>
 
         {/* HOW */}
-        <section className="py-16">
-          <div className="max-w-3xl space-y-4">
-            <div className="font-mono text-[11px] uppercase tracking-[0.3em] text-[color:var(--color-accent)]">
-              how it runs
+        <section className="border-t border-[color:var(--color-border)] pt-14 pb-10 lg:pt-24">
+          <div className="mb-12 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div
+                className="text-[10.5px] uppercase tracking-[0.35em] text-[color:var(--color-accent)]"
+                style={{ fontFamily: 'var(--font-mono)' }}
+              >
+                // method · address-to-NPV
+              </div>
+              <h2
+                className="mt-3 type-display-soft text-[color:var(--color-text)]"
+                style={{ fontSize: 'clamp(36px, 4.6vw, 68px)', lineHeight: 1.02 }}
+              >
+                Address in. <span className="text-[color:var(--color-accent)]">NPV out.</span>
+              </h2>
             </div>
-            <h2 className="text-3xl font-bold tracking-tight text-[color:var(--color-text)] sm:text-4xl">
-              Address in. NPV out.
-            </h2>
+            <div
+              className="text-[10.5px] uppercase tracking-[0.25em] text-[color:var(--color-text-dim)]"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            >
+              t<sub className="mx-0.5 text-[8px]">0</sub> → t<sub className="mx-0.5 text-[8px]">+20s</sub>
+            </div>
           </div>
 
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-3">
             <StepCard
-              num="01"
-              title="Tap an address"
-              body="Your address resolves to a utility, a climate zone, a permit history, and a median home value."
+              n="01"
+              title="Drop an address"
+              body="Geocoded to a utility, irradiance value, permit history, and median home value. La Jolla or wherever."
             />
             <StepCard
-              num="02"
+              n="02"
               title="Ten APIs fan out"
-              body="Orthogonal orchestrates the parallel calls. A live ticker streams real latencies — not a loading spinner."
+              body="One asyncio.gather call, one Orthogonal SDK. The ticker you see above is the real thing, streaming real latencies."
             />
             <StepCard
-              num="03"
+              n="03"
               title="A number you can quote"
-              body="25-year NPV, payback period, CO₂ avoided, and the social cost of carbon converted into dollars."
+              body="25-year NPV, payback period, CO₂ avoided · priced at the social cost of carbon · ROI as a % of your home value."
             />
           </div>
         </section>
 
-        {/* CTA */}
+        {/* CTA slab */}
         <section className="py-20">
-          <div className="rounded-3xl border border-[color:var(--color-border)] bg-gradient-to-b from-[color:var(--color-card)] to-[color:var(--color-bg-elevated)] p-10 text-center sm:p-16">
-            <h2 className="text-3xl font-bold tracking-tight text-[color:var(--color-text)] sm:text-5xl">
-              Run it on your house.
+          <div
+            className="relative overflow-hidden rounded-[2px] border border-[color:var(--color-border)] bg-gradient-to-br from-[color:var(--color-card)] via-[color:var(--color-card-elevated)] to-[color:var(--color-bg-elevated)] p-10 sm:p-16"
+            style={{
+              backgroundImage:
+                'linear-gradient(135deg, var(--color-card) 0%, var(--color-card-elevated) 55%, var(--color-bg-elevated) 100%), radial-gradient(circle at 90% -10%, rgba(245,215,110,0.12), transparent 60%)',
+            }}
+          >
+            <div
+              className="absolute right-8 top-8 h-20 w-20 rounded-full border border-dashed border-[color:var(--color-accent)]/30 anim-sunbeam"
+              style={{ animationDuration: '30s' }}
+            />
+            <div
+              className="text-[10.5px] uppercase tracking-[0.3em] text-[color:var(--color-accent)]"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            >
+              ▸ ready when you are
+            </div>
+            <h2
+              className="mt-4 type-display-soft text-[color:var(--color-text)]"
+              style={{ fontSize: 'clamp(40px, 5vw, 80px)', lineHeight: 0.98 }}
+            >
+              Run it on <span className="type-display-italic text-[color:var(--color-accent)]">your house.</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base text-[color:var(--color-text-muted)]">
-              20 seconds, no signup required. Sign in if you want to save runs.
+            <p className="mt-5 max-w-lg text-[15.5px] text-[color:var(--color-text-muted)]">
+              Twenty seconds, no signup. Sign in with GitHub or magic link if you
+              want to save runs across web and mobile.
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/install"
-                className="rounded-xl bg-[color:var(--color-accent)] px-8 py-4 text-base font-semibold text-[color:var(--color-bg)] hover:brightness-105"
+                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-7 py-3.5 text-[13px] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-bg)]"
+                style={{ fontFamily: 'var(--font-mono)' }}
               >
-                start an estimate →
+                <span className="relative z-10">start estimate →</span>
+                <span className="absolute inset-0 -translate-x-full bg-[color:var(--color-accent-warm)] transition-transform duration-500 group-hover:translate-x-0" />
               </Link>
               <Link
                 href="/login"
-                className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)] px-8 py-4 text-base font-semibold text-[color:var(--color-text)]"
+                className="inline-flex items-center gap-2 rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)]/80 px-7 py-3.5 text-[13px] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-text)] hover:border-[color:var(--color-accent)]"
+                style={{ fontFamily: 'var(--font-mono)' }}
               >
                 sign in to save
               </Link>
@@ -169,34 +291,14 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-[color:var(--color-border)] py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 font-mono text-xs text-[color:var(--color-text-dim)]">
-          <div>helios · datahacks 2026 · best use of orthogonal</div>
-          <div className="flex items-center gap-5">
-            <a
-              href="https://github.com/daniticau/helios"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-[color:var(--color-text)]"
-            >
-              github
-            </a>
-            <a
-              href="https://orthogonal.com"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-[color:var(--color-text)]"
-            >
-              orthogonal
-            </a>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
 
-function StatBlock({
+// ---------- subcomponents ----------
+
+function MetaStat({
   value,
   label,
   accent,
@@ -206,89 +308,156 @@ function StatBlock({
   accent?: boolean;
 }) {
   return (
-    <div className="border-l-2 border-[color:var(--color-border)] pl-3">
+    <div className="space-y-1">
       <div
-        className={`tabular-nums text-2xl font-bold ${
+        className={`tabular-nums text-[28px] font-semibold leading-none ${
           accent ? 'text-[color:var(--color-accent)]' : 'text-[color:var(--color-text)]'
         }`}
+        style={{ fontFamily: 'var(--font-display)', fontVariationSettings: '"opsz" 144' }}
       >
         {value}
       </div>
-      <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[color:var(--color-text-muted)]">
+      <div className="text-[9.5px] uppercase tracking-[0.25em] text-[color:var(--color-text-dim)]">
         {label}
       </div>
     </div>
   );
 }
 
-function StepCard({
-  num,
-  title,
-  body,
-}: {
-  num: string;
-  title: string;
-  body: string;
-}) {
+function StepCard({ n, title, body }: { n: string; title: string; body: string }) {
   return (
-    <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-card)] p-6">
-      <div className="font-mono text-[11px] uppercase tracking-[0.3em] text-[color:var(--color-accent)]">
-        {num}
+    <div className="group relative overflow-hidden border border-[color:var(--color-border)] bg-[color:var(--color-card)]/60 p-6 transition hover:border-[color:var(--color-accent)]/60 hover:bg-[color:var(--color-card)]">
+      <div
+        className="absolute -right-3 -top-4 select-none text-[140px] font-bold leading-none text-[color:var(--color-accent)]/5 transition group-hover:text-[color:var(--color-accent)]/10"
+        style={{
+          fontFamily: 'var(--font-display)',
+          fontVariationSettings: '"opsz" 144',
+        }}
+      >
+        {n}
       </div>
-      <h3 className="mt-3 text-xl font-bold text-[color:var(--color-text)]">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-[color:var(--color-text-muted)]">
+      <div
+        className="relative text-[10px] uppercase tracking-[0.3em] text-[color:var(--color-accent)]"
+        style={{ fontFamily: 'var(--font-mono)' }}
+      >
+        step · {n}
+      </div>
+      <h3 className="relative mt-3 text-[22px] font-semibold leading-tight text-[color:var(--color-text)]">
+        {title}
+      </h3>
+      <p className="relative mt-3 text-[14px] leading-[1.55] text-[color:var(--color-text-muted)]">
         {body}
       </p>
     </div>
   );
 }
 
-function TickerViz({
+function MarqueeStrip() {
+  const items = [
+    'ORTHOGONAL',
+    'TEN APIs',
+    'ONE SDK',
+    'NEM 3.0',
+    'ZENPOWER',
+    'PRECIP.AI',
+    'LINKUP',
+    'SCRAPEGRAPH',
+    'AVIATO',
+    'PDL',
+    'CAISO OASIS',
+    'DATAHACKS 2026',
+  ];
+  return (
+    <div
+      className="flex w-max items-center whitespace-nowrap"
+      style={{
+        animation: 'ticker-scroll 50s linear infinite',
+        fontFamily: 'var(--font-mono)',
+      }}
+    >
+      {[0, 1].map((pass) => (
+        <div key={pass} className="flex items-center">
+          {items.map((t, i) => (
+            <span
+              key={`${pass}-${i}`}
+              className="flex items-center gap-4 px-6 text-[11px] uppercase tracking-[0.35em] text-[color:var(--color-text-dim)]"
+            >
+              <span
+                className="h-1 w-1 rounded-full bg-[color:var(--color-accent)]/70"
+                style={{ boxShadow: '0 0 6px rgba(245,215,110,0.6)' }}
+              />
+              {t}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InstrumentPanel({
   apis,
   maxLatency,
+  totalMs,
 }: {
-  apis: Array<{ name: string; latency: number }>;
+  apis: Array<{ name: string; latency: number; purpose: string; partner: string }>;
   maxLatency: number;
+  totalMs: number;
 }) {
-  // Animation: each row's bar scales from 0→1 over a duration proportional to
-  // its latency, then the whole block loops. Pure CSS keyframes; no JS.
   return (
-    <div className="relative self-start rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-card)] p-5 shadow-[0_18px_60px_-20px_rgba(0,0,0,0.6)]">
-      <div className="mb-3 flex items-center justify-between border-b border-[color:var(--color-border)] pb-2">
-        <div className="flex items-center gap-1.5">
-          <span className="font-mono text-xs tracking-wider text-[color:var(--color-accent)]">
-            orthogonal &gt;
+    <div
+      className="relative overflow-hidden rounded-[2px] border border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/90 shadow-[0_30px_90px_-30px_rgba(0,0,0,0.9)]"
+      style={{ fontFamily: 'var(--font-mono)' }}
+    >
+      {/* top chrome */}
+      <div className="flex items-center justify-between gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg)]/60 px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          <span
+            className="h-2 w-2 rounded-full bg-[color:var(--color-success)]"
+            style={{ boxShadow: '0 0 6px rgba(135,214,125,0.7)' }}
+          />
+          <span className="text-[10.5px] uppercase tracking-[0.28em] text-[color:var(--color-accent)]">
+            orthogonal · fan-out
           </span>
-          <span className="font-mono text-xs text-[color:var(--color-text-muted)]">
-            fan-out in flight
-          </span>
-          <span className="caret-blink font-mono text-xs text-[color:var(--color-accent)]">
-            ▌
-          </span>
+          <span className="caret-blink text-[color:var(--color-accent)]">▌</span>
         </div>
-        <div className="font-mono text-[10px] text-[color:var(--color-text-muted)]">
-          10/10 · 14ms min · 1960ms max
+        <div className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--color-text-dim)]">
+          10/10 · 14ms min · <span className="text-[color:var(--color-text-muted)]">{totalMs}ms</span> max
         </div>
       </div>
-      <div className="space-y-2.5">
+
+      {/* scan line */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className="absolute left-0 right-0 h-[140px] -translate-y-full bg-gradient-to-b from-transparent via-[color:var(--color-accent)]/6 to-transparent"
+          style={{ animation: 'scan-line 8s ease-in-out infinite' }}
+        />
+      </div>
+
+      {/* rows */}
+      <div className="relative px-2 py-3">
         {apis.map((a, i) => {
           const widthPct = (a.latency / maxLatency) * 100;
-          const duration = Math.max(0.6, (a.latency / maxLatency) * 1.8);
+          const duration = Math.max(0.7, (a.latency / maxLatency) * 1.9);
           const delay = i * 0.12;
           return (
-            <div key={a.name} className="flex items-center gap-3">
+            <div
+              key={a.name}
+              className="group flex items-center gap-3 border-b border-[color:var(--color-hairline)] px-2 py-2 last:border-0"
+            >
+              <span className="w-5 text-[9.5px] tabular-nums text-[color:var(--color-text-dim)]">
+                {String(i + 1).padStart(2, '0')}
+              </span>
               <span
-                className="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-[color:var(--color-success)]"
-                style={{
-                  animation: `pulse-dot 2.2s ease-in-out ${delay}s infinite`,
-                }}
+                className="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[color:var(--color-success)]"
+                style={{ animation: `pulse-dot 2.4s ease-in-out ${delay}s infinite` }}
               />
-              <span className="w-28 flex-shrink-0 font-mono text-[11px] text-[color:var(--color-text)]">
+              <span className="w-[104px] shrink-0 text-[11px] text-[color:var(--color-text)]">
                 {a.name}
               </span>
-              <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-[color:var(--color-bg-elevated)]">
+              <div className="relative h-[3px] flex-1 overflow-hidden rounded-full bg-[color:var(--color-bg-elevated)]/70">
                 <div
-                  className="absolute left-0 top-0 h-full origin-left rounded-full bg-gradient-to-r from-[color:var(--color-accent-dim)] to-[color:var(--color-accent)]"
+                  className="absolute left-0 top-0 h-full origin-left rounded-full bg-gradient-to-r from-[color:var(--color-accent-dim)] via-[color:var(--color-accent)] to-[color:var(--color-accent-warm)]"
                   style={{
                     width: `${widthPct}%`,
                     animation: `latency-bar ${duration}s cubic-bezier(0.22, 0.75, 0.25, 1) ${delay}s infinite alternate`,
@@ -296,10 +465,8 @@ function TickerViz({
                 />
               </div>
               <span
-                className="w-14 flex-shrink-0 text-right font-mono text-[10px] tabular-nums text-[color:var(--color-text-muted)]"
-                style={{
-                  animation: `latency-cycle ${duration * 2}s ease-in-out ${delay}s infinite`,
-                }}
+                className="w-[64px] shrink-0 text-right text-[10px] tabular-nums text-[color:var(--color-text-muted)]"
+                style={{ animation: `latency-cycle ${duration * 2}s ease-in-out ${delay}s infinite` }}
               >
                 {a.latency}ms
               </span>
@@ -307,8 +474,13 @@ function TickerViz({
           );
         })}
       </div>
-      <div className="mt-4 border-t border-[color:var(--color-border)] pt-3 font-mono text-[10px] text-[color:var(--color-text-dim)]">
-        $ 10 paid APIs, 1 SDK. Every latency here is real on a live run.
+
+      {/* bottom chrome */}
+      <div className="flex items-center justify-between border-t border-[color:var(--color-border)] bg-[color:var(--color-bg)]/60 px-4 py-2 text-[10px] text-[color:var(--color-text-dim)]">
+        <span>$ helios fanout --live</span>
+        <span>
+          <span className="text-[color:var(--color-accent)]">·</span> every latency is real
+        </span>
       </div>
     </div>
   );
