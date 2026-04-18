@@ -54,7 +54,6 @@ run:
     #
     #   ORTHOGONAL_API_KEY          (required)
     #   ANTHROPIC_API_KEY           (required)
-    #   ELEVENLABS_API_KEY          (optional — narration)
     #   SUPABASE_URL                (optional — auth; JWKS fetched from here)
     #   SUPABASE_PUBLISHABLE_KEY    (optional — new-format anon key)
     #   SUPABASE_SECRET_KEY         (optional — for backend admin calls)

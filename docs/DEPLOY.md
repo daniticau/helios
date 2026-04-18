@@ -126,7 +126,6 @@ Render → Service → **Environment** tab. Add these:
 |---|---|
 | `ORTHOGONAL_API_KEY` | from `.env` |
 | `ANTHROPIC_API_KEY` | from `.env` |
-| `ELEVENLABS_API_KEY` | *(optional)* from `.env` |
 | `SUPABASE_URL` | step 1a |
 | `SUPABASE_PUBLISHABLE_KEY` | step 1a |
 | `SUPABASE_SECRET_KEY` | step 1a (backend-only) |

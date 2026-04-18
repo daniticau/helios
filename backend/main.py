@@ -15,9 +15,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
-from eleven_client import close as close_elevenlabs
 from orthogonal_client import close as close_orthogonal
-from routes import live, narrate, parse_bill, roi, zenpower as zp_routes
+from routes import live, parse_bill, roi, zenpower as zp_routes
 from zenpower import ZenPowerIndex
 
 
@@ -30,7 +29,6 @@ async def lifespan(app: FastAPI):
     finally:
         # Release the Orthogonal gateway client's connection pool on shutdown.
         await close_orthogonal()
-        await close_elevenlabs()
 
 
 app = FastAPI(
@@ -52,7 +50,6 @@ app.include_router(roi.router, prefix="/api", tags=["roi"])
 app.include_router(live.router, prefix="/api", tags=["live"])
 app.include_router(parse_bill.router, prefix="/api", tags=["bill"])
 app.include_router(zp_routes.router, prefix="/api", tags=["zenpower"])
-app.include_router(narrate.router, prefix="/api", tags=["narrate"])
 
 
 @app.get("/")

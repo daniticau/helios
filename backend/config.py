@@ -20,8 +20,6 @@ class Settings(BaseSettings):
 
     orthogonal_api_key: str = Field(default="")
     anthropic_api_key: str = Field(default="")
-    elevenlabs_api_key: str = Field(default="")
-    elevenlabs_voice_id: str = Field(default="21m00Tcm4TlvDq8ikWAM")
 
     backend_host: str = "0.0.0.0"
     backend_port: int = 8000
