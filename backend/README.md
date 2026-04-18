@@ -29,6 +29,10 @@ uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
 | `tariffs.py` | Hardcoded CA utility TOU schedules (PG&E EV2-A, etc.) |
 | `econ/` | Pure-Python NPV + greedy arbitrage (WS2 owns) |
 
+## Docker
+
+A `Dockerfile` and `.dockerignore` live alongside this README. Build from the repo root: `docker build -t helios-backend ./backend` and run with `docker run --rm -p 8080:8080 -e ORTHOGONAL_API_KEY=... -e ANTHROPIC_API_KEY=... helios-backend`. The image boots `uvicorn` on port 8080, runs as the non-root `helios` user, and bakes `data/zenpower_permits.csv` into the image so the container is self-contained. Deployment to AWS App Runner is documented in `docs/INFRA.md`.
+
 ## Phase 1 TODO
 
 `orchestrator.py` currently uses `_stub()` for all API calls. Replace the body of each `fetch_*` function with a real Orthogonal SDK call, keeping the return shape `(payload: dict, OrthogonalCallLog)`.

@@ -1,0 +1,44 @@
+# Keep the image small and keep secrets out.
+
+# Secrets / env files — App Runner injects env vars at runtime.
+.env
+.env.*
+!.env.example
+
+# Python build + cache cruft
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Tests don't ship — they run in CI / locally, not in prod.
+econ/tests/
+
+# Repo stuff we don't need inside the container
+.git/
+.gitignore
+.github/
+.vscode/
+.idea/
+
+# Editor / OS turds
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Docs + container config shouldn't COPY into the image
+Dockerfile
+.dockerignore
+README.md
