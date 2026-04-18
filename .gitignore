@@ -24,7 +24,7 @@ htmlcov/
 dist/
 build/
 
-# --- Node / Mobile ---
+# --- Node / Mobile / Web ---
 node_modules/
 .expo/
 .expo-shared/
@@ -34,6 +34,9 @@ node_modules/
 *.mobileprovision
 *.orig.*
 web-build/
+.next/
+out/
+.vercel/
 
 # --- Build artifacts ---
 ios/Pods/
