@@ -15,7 +15,8 @@ dependencies = [
     "python-multipart>=0.0.12",
     "anthropic>=0.40",
     "pdfplumber>=0.11",
-    "orthogonal>=0.1.0",
+    # Orthogonal has no official Python SDK — we call the REST API
+    # (https://api.orthogonal.com/v1/run) directly via httpx.
 ]
 
 [project.optional-dependencies]

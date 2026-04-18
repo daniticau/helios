@@ -15,6 +15,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
+from orthogonal_client import close as close_orthogonal
 from routes import live, parse_bill, roi, zenpower as zp_routes
 from zenpower import ZenPowerIndex
 
@@ -23,7 +24,11 @@ from zenpower import ZenPowerIndex
 async def lifespan(app: FastAPI):
     # Preload ZenPower permits into memory for fast per-ZIP lookup.
     app.state.zenpower = ZenPowerIndex.load(settings.zenpower_csv_path)
-    yield
+    try:
+        yield
+    finally:
+        # Release the Orthogonal gateway client's connection pool on shutdown.
+        await close_orthogonal()
 
 
 app = FastAPI(
