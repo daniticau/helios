@@ -23,7 +23,7 @@ The 30-second hero moment of the demo is an animation showing 8–10 paid APIs f
 # backend
 cd backend && uv sync && uv run uvicorn main:app --reload
 # mobile (separate terminal)
-cd mobile && pnpm install && pnpm start
+cd mobile && npm install && npm start
 ```
 
 Backend boots on 8000; mobile reads `API_BASE_URL` from `app.json → expo.extra.apiBaseUrl`.

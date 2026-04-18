@@ -6,12 +6,21 @@ Expo + React Native + TypeScript.
 
 ```bash
 cd mobile
-pnpm install
-pnpm start
+cp .env.example .env  # fill in Supabase URL + publishable key
+npm install
+npm start
 # scan the QR with Expo Go, or press 'i' for iOS simulator
 ```
 
-Backend URL is set in `app.json → expo.extra.apiBaseUrl` (defaults to `http://localhost:8000`). If you're running the backend on a laptop and mobile on a physical device, change it to the laptop's LAN IP or ngrok URL.
+Config is resolved at runtime by `app.config.js`, which merges `app.json` with env vars from `mobile/.env`:
+
+| Env var | Purpose |
+|---------|---------|
+| `EXPO_PUBLIC_API_BASE_URL` | Backend URL (laptop LAN IP or ngrok if running on a physical device). |
+| `EXPO_PUBLIC_SUPABASE_URL` | Supabase project URL. |
+| `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable (client) key. |
+
+`.env` is gitignored — never commit real keys.
 
 ## Files
 

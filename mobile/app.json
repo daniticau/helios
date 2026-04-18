@@ -20,12 +20,10 @@
     "plugins": [
       "expo-notifications",
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-asset"
     ],
     "extra": {
-      "apiBaseUrl": "http://100.112.112.240:8000",
-      "supabaseUrl": "",
-      "supabasePublishableKey": ""
+      "apiBaseUrl": "http://100.112.112.240:8000"
     }
   }
 }

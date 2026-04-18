@@ -259,7 +259,7 @@ where $g_t = l_t - p_t + c_t - d_t$ is net flow from grid (positive = buying).
 
 ### Dev tooling
 - **uv** for Python dep management (faster than pip)
-- **pnpm** for mobile
+- **npm** for mobile
 - **ngrok** for exposing local backend during dev (before deploy)
 
 ---

@@ -27,6 +27,9 @@ dev = [
     "pytest-asyncio>=0.24",
     "ruff>=0.7",
     "mypy>=1.13",
+    "respx>=0.21",
+    "pytest-httpx>=0.32",
+    "reportlab>=4.2",
 ]
 
 [tool.ruff]
@@ -39,4 +42,18 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["econ/tests"]
+testpaths = ["econ/tests", "tests"]
+
+# PEP 735 dev-dependency group — mirrors [project.optional-dependencies].dev
+# so `uv sync --dev && uv run pytest` activates the same deps as
+# `uv sync --extra dev && uv run --extra dev pytest`.
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.7",
+    "mypy>=1.13",
+    "respx>=0.21",
+    "pytest-httpx>=0.32",
+    "reportlab>=4.2",
+]

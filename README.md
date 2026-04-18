@@ -46,8 +46,8 @@ helios/
 3. Mobile:
    ```bash
    cd mobile
-   pnpm install
-   pnpm start
+   npm install
+   npm start
    # scan QR with Expo Go
    ```
 
