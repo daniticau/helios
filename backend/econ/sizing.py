@@ -12,6 +12,13 @@ from schemas import ProposedSystem
 def recommend_system_size(
     monthly_kwh: float, roof_constraint_kw: float = 12.0
 ) -> ProposedSystem:
+    """Suggest a solar+battery system sized to the household's annual load.
+
+    Rule of thumb: cover ~110% of annual kWh (margin for shoulder months
+    when production dips), bounded below at 3 kW (min viable install) and
+    above at the roof constraint. Battery is sized to ~60% of a single
+    average day's load, capped at 20 kWh (typical Powerwall ceiling).
+    """
     # Target: cover ~110% of annual load (margin for shoulder months).
     annual_kwh = monthly_kwh * 12.0
     target_kw = (annual_kwh * 1.10) / 1500.0
