@@ -1,6 +1,9 @@
 // Supabase client for React Native. Persists the session to expo-secure-store
 // so users stay signed in across app restarts. Reads config from
 // app.json → expo.extra so secrets live alongside apiBaseUrl.
+//
+// Uses the NEW Supabase publishable key (sb_publishable_...) — safe to
+// bundle in the mobile app binary.
 
 import 'react-native-url-polyfill/auto';
 import Constants from 'expo-constants';
@@ -35,9 +38,10 @@ const SecureStoreAdapter = {
 
 const extra = Constants.expoConfig?.extra as Record<string, unknown> | undefined;
 const SUPABASE_URL = (extra?.supabaseUrl as string | undefined) ?? '';
-const SUPABASE_ANON_KEY = (extra?.supabaseAnonKey as string | undefined) ?? '';
+const SUPABASE_PUBLISHABLE_KEY =
+  (extra?.supabasePublishableKey as string | undefined) ?? '';
 
-export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
 
 /**
  * Lazy singleton. Returns a real client when configured, or null when env
@@ -47,7 +51,7 @@ let _client: SupabaseClient | null = null;
 export function getSupabase(): SupabaseClient | null {
   if (!isSupabaseConfigured) return null;
   if (_client) return _client;
-  _client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  _client = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
       storage: SecureStoreAdapter,
       autoRefreshToken: true,

@@ -40,18 +40,30 @@ Three control planes:
    - Plan: **Free** tier is enough.
 3. Wait ~2 minutes for the project to provision.
 
-### Step 1a — Copy the three values you need
+### Step 1a — Enable the new key model + copy three values
+
+Helios uses Supabase's **new API key model** (publishable + secret keys with
+asymmetric JWT signing). The legacy `anon` / `service_role` / shared JWT
+secret model is not used.
 
 Once the project is ready:
 
-1. Click **Project Settings** (gear icon, bottom-left) → **API**.
-2. Copy:
+1. Click **Project Settings** (gear icon, bottom-left) → **API Keys**.
+2. If not already enabled, click **Enable new API keys** (or **Migrate to
+   new API keys**). This also enables asymmetric JWT signing (ES256) and
+   exposes a JWKS endpoint that the backend uses to verify tokens.
+3. Copy:
    - **Project URL** (e.g. `https://abcxyz.supabase.co`) → `SUPABASE_URL`
-   - **anon public** key (starts with `eyJ…`) → `SUPABASE_ANON_KEY`
-3. Click **API Settings** → scroll to **JWT Settings**.
-4. Copy the **JWT Secret** (a random string, ~40+ chars) → `SUPABASE_JWT_SECRET`.
+   - **Publishable key** (starts with `sb_publishable_`) →
+     `SUPABASE_PUBLISHABLE_KEY` (this is safe to expose to browser/mobile)
+   - **Secret key** (starts with `sb_secret_`) → `SUPABASE_SECRET_KEY`
+     (backend-only; never ship to clients)
 
-Save these — you will paste them into Vercel and Render in Step 3 and Step 4.
+No separate JWT secret needed — the backend verifies JWTs against the
+public JWKS at `<SUPABASE_URL>/auth/v1/.well-known/jwks.json`.
+
+Save these — you will paste them into Vercel and Render (or App Runner)
+in Step 3 and Step 2.
 
 ### Step 1b — Configure auth providers
 
@@ -114,9 +126,10 @@ Render → Service → **Environment** tab. Add these:
 |---|---|
 | `ORTHOGONAL_API_KEY` | from `.env` |
 | `ANTHROPIC_API_KEY` | from `.env` |
+| `ELEVENLABS_API_KEY` | *(optional)* from `.env` |
 | `SUPABASE_URL` | step 1a |
-| `SUPABASE_ANON_KEY` | step 1a |
-| `SUPABASE_JWT_SECRET` | step 1a |
+| `SUPABASE_PUBLISHABLE_KEY` | step 1a |
+| `SUPABASE_SECRET_KEY` | step 1a (backend-only) |
 | `BACKEND_ALLOWED_ORIGINS` | `https://helios.daniticau.com,https://helios-daniticau.vercel.app` |
 
 Click **Save Changes**. Render redeploys.
@@ -143,11 +156,11 @@ Before clicking Deploy, expand **Environment Variables** and add:
 | Key | Value |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | step 1a |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | step 1a |
-| `BACKEND_URL` | step 2c (Render URL) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | step 1a |
+| `BACKEND_URL` | step 2c (Render / App Runner URL) |
 
 > The `NEXT_PUBLIC_` prefix means the value is exposed to the browser. That's
-> correct for Supabase URL + anon key — never paste the JWT secret into
+> correct for the publishable key — never paste the secret key into
 > Vercel, it stays on the backend only.
 
 Click **Deploy**. First deploy takes ~90 seconds.
@@ -233,7 +246,7 @@ Edit `mobile/app.json`:
 "extra": {
   "apiBaseUrl": "https://helios-backend.onrender.com",
   "supabaseUrl": "https://abcxyz.supabase.co",
-  "supabaseAnonKey": "eyJ..."
+  "supabasePublishableKey": "sb_publishable_..."
 }
 ```
 
@@ -257,28 +270,29 @@ The DEMO_PROFILE flow on the Install tab continues to work anonymously.
 
 | Var | Where to get |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → API → anon public |
-| `BACKEND_URL` | Render service URL |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API Keys → URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → API Keys → publishable (`sb_publishable_…`) |
+| `BACKEND_URL` | Render / App Runner service URL |
 
-### Backend (Render)
+### Backend (Render or AWS App Runner)
 
 | Var | Where to get |
 |---|---|
 | `ORTHOGONAL_API_KEY` | local `.env` |
 | `ANTHROPIC_API_KEY` | local `.env` |
+| `ELEVENLABS_API_KEY` | local `.env` (optional — narration) |
 | `SUPABASE_URL` | same as web |
-| `SUPABASE_ANON_KEY` | same as web (optional on backend, safe to set) |
-| `SUPABASE_JWT_SECRET` | Supabase → API → JWT Secret (**backend only!**) |
+| `SUPABASE_PUBLISHABLE_KEY` | same as web |
+| `SUPABASE_SECRET_KEY` | Supabase → API Keys → secret (`sb_secret_…`) (**backend only!**) |
 | `BACKEND_ALLOWED_ORIGINS` | `https://helios.daniticau.com,https://*.vercel.app` |
 
 ### Mobile (mobile/app.json `extra`)
 
 | Key | Value |
 |---|---|
-| `apiBaseUrl` | Render service URL |
+| `apiBaseUrl` | Render / App Runner service URL |
 | `supabaseUrl` | Supabase project URL |
-| `supabaseAnonKey` | Supabase anon key |
+| `supabasePublishableKey` | Supabase publishable key (`sb_publishable_…`) |
 
 ---
 
@@ -294,8 +308,10 @@ The DEMO_PROFILE flow on the Install tab continues to work anonymously.
   the Vercel URL there instead.
 
 **Backend 401s on authed requests**
-→ `SUPABASE_JWT_SECRET` on Render doesn't match your Supabase project.
-  Re-copy from Supabase → API → JWT Settings.
+→ `SUPABASE_URL` on the backend doesn't match the project that issued the
+  JWT. The backend fetches the JWKS from `{SUPABASE_URL}/auth/v1/.well-known/jwks.json`
+  — if that URL doesn't match, signature verification fails. Double-check
+  the URL is the exact project the web/mobile client is logging in to.
 
 **`helios.daniticau.com` not resolving after 1h**
 → Your CNAME value is wrong, or (Cloudflare) the proxy is on. In Cloudflare,

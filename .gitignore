@@ -37,6 +37,7 @@ web-build/
 .next/
 out/
 .vercel/
+*.tsbuildinfo
 
 # --- Build artifacts ---
 ios/Pods/

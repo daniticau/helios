@@ -10,11 +10,11 @@ export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   // When Supabase isn't configured, skip auth-cookie refresh entirely.
-  if (!url || !anon) return response;
+  if (!url || !publishableKey) return response;
 
-  const supabase = createServerClient(url, anon, {
+  const supabase = createServerClient(url, publishableKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();

@@ -34,14 +34,16 @@ class Settings(BaseSettings):
 
     zenpower_csv_path: Path = BACKEND_DIR / "data" / "zenpower_permits.csv"
 
-    # Supabase auth — optional. When unset, all requests are treated as
-    # anonymous and auth middleware becomes a no-op. Keeps the hackathon
-    # demo working with zero provisioning.
+    # Supabase auth — uses the NEW publishable/secret key model with
+    # asymmetric JWT signing (JWKS). When supabase_url is unset, all
+    # requests are treated as anonymous and auth middleware is a no-op.
     supabase_url: str = Field(default="")
-    supabase_anon_key: str = Field(default="")
-    # Shared HS256 secret (Supabase's default for legacy JWT verification).
-    # Get from Project Settings → API → JWT Settings → JWT Secret.
-    supabase_jwt_secret: str = Field(default="")
+    # sb_publishable_... — safe to expose to browser/mobile clients.
+    supabase_publishable_key: str = Field(default="")
+    # sb_secret_... — backend admin operations only. Not needed for JWT
+    # verification (we use JWKS for that) but reserved for future admin
+    # calls against Supabase's `auth.admin.*` endpoints.
+    supabase_secret_key: str = Field(default="")
     supabase_jwt_audience: str = "authenticated"
 
 

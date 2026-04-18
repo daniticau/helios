@@ -48,7 +48,7 @@ function LoginForm() {
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!configured) {
-      setError('Auth not configured. Set NEXT_PUBLIC_SUPABASE_* in .env.local.');
+      setError('Auth not configured. Set NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local.');
       setStatus('error');
       return;
     }
@@ -73,7 +73,7 @@ function LoginForm() {
 
   const handleGithub = async () => {
     if (!configured) {
-      setError('Auth not configured. Set NEXT_PUBLIC_SUPABASE_* in .env.local.');
+      setError('Auth not configured. Set NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local.');
       setStatus('error');
       return;
     }
@@ -109,7 +109,7 @@ function LoginForm() {
 
         {!configured && (
           <div className="mt-6 rounded-lg border border-[color:var(--color-warning)]/40 bg-[color:var(--color-card)] px-4 py-3 font-mono text-xs text-[color:var(--color-warning)]">
-            auth placeholder — SUPABASE env vars not set. See docs/DEPLOY.md.
+            auth placeholder — NEXT_PUBLIC_SUPABASE_* env vars not set. See docs/DEPLOY.md.
           </div>
         )}
 

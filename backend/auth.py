@@ -1,14 +1,20 @@
 """Supabase JWT verification — OPTIONAL auth for Helios endpoints.
 
-Design intent (see agent spec):
+Uses the NEW Supabase API key model (publishable + secret keys with
+asymmetric JWT signing). JWTs are verified against Supabase's JWKS
+endpoint — no shared HS256 secret to ship.
+
+Design intent:
 - All endpoints continue to accept anonymous requests (200 OK, no token).
-- When a valid Supabase-issued JWT is present in the Authorization header,
-  we expose a `User` object to route handlers via `Depends(get_optional_user)`.
-- Hackathon setup uses Supabase's legacy HS256 secret. JWKS/RS256 is a
-  stretch goal but the verification code is kept tight so swapping later
-  is a one-file change.
-- If SUPABASE_JWT_SECRET is unset, every request is anonymous — no crashes,
-  no warnings, demo flow just works.
+- When a valid Supabase-issued JWT is present in the Authorization
+  header, we expose a ``User`` object via ``Depends(get_optional_user)``.
+- If ``SUPABASE_URL`` is unset, every request is anonymous — no crashes,
+  no warnings. The demo flow works without provisioning anything.
+
+JWKS endpoint: ``{SUPABASE_URL}/auth/v1/.well-known/jwks.json``
+
+Supported algorithms: ``ES256`` (Supabase's default) and ``RS256``
+(alternate option in Project Settings → API Keys → JWT Signing Keys).
 """
 
 from __future__ import annotations
@@ -18,10 +24,33 @@ from dataclasses import dataclass
 
 import jwt
 from fastapi import Header
+from jwt import PyJWKClient, PyJWKClientError
 
 from config import settings
 
 logger = logging.getLogger("helios.auth")
+
+_SUPPORTED_ALGS = ["ES256", "RS256"]
+
+# Lazy JWKS client — first-use fetches keys, then caches them per
+# PyJWKClient's built-in cache (max 16 keys, refreshed on kid miss).
+_jwks_client: PyJWKClient | None = None
+
+
+def _get_jwks_client() -> PyJWKClient | None:
+    """Return a cached JWKS client, or None if auth isn't configured."""
+    global _jwks_client
+    if not settings.supabase_url:
+        return None
+    if _jwks_client is None:
+        jwks_url = f"{settings.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
+        _jwks_client = PyJWKClient(
+            jwks_url,
+            cache_keys=True,
+            max_cached_keys=16,
+            lifespan=3600,  # refresh key cache hourly
+        )
+    return _jwks_client
 
 
 @dataclass(frozen=True)
@@ -44,19 +73,23 @@ def _extract_bearer(authorization: str | None) -> str | None:
 
 
 def _verify_token(token: str) -> User | None:
-    """Verify a Supabase-issued HS256 JWT and return the user, or None."""
-    secret = settings.supabase_jwt_secret
-    if not secret:
+    """Verify a Supabase-issued JWT via JWKS and return the user, or None."""
+    jwks = _get_jwks_client()
+    if jwks is None:
         # Auth not configured — treat everything as anonymous.
         return None
     try:
+        signing_key = jwks.get_signing_key_from_jwt(token)
         claims = jwt.decode(
             token,
-            secret,
-            algorithms=["HS256"],
+            signing_key.key,
+            algorithms=_SUPPORTED_ALGS,
             audience=settings.supabase_jwt_audience,
             options={"require": ["exp", "sub"]},
         )
+    except PyJWKClientError as e:
+        logger.info("auth: jwks lookup failed (%s)", e)
+        return None
     except jwt.ExpiredSignatureError:
         logger.info("auth: token expired")
         return None

@@ -145,7 +145,10 @@ compiling pandas/numpy wheels on first run; subsequent builds are cached).
    | Name | Value |
    |------|-------|
    | `SUPABASE_URL` | *(from Supabase project settings)* |
-   | `SUPABASE_JWT_SECRET` | *(from Supabase project settings > API)* |
+   | `SUPABASE_PUBLISHABLE_KEY` | *(Settings → API Keys → publishable, `sb_publishable_...`)* |
+   | `SUPABASE_SECRET_KEY` | *(Settings → API Keys → secret, `sb_secret_...`)* |
+
+   Backend verifies JWTs via Supabase's JWKS — no shared secret needed.
 
    For long-term production: migrate secrets to **AWS Secrets Manager** and
    reference them in App Runner via the "Secrets Manager" source option.

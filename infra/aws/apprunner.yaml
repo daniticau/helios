@@ -52,7 +52,9 @@ run:
     # > Environment variables) so they never live in source control. See
     # docs/INFRA.md for the full list.
     #
-    #   ORTHOGONAL_API_KEY        (required)
-    #   ANTHROPIC_API_KEY         (required)
-    #   SUPABASE_URL              (if auth agent wired Supabase)
-    #   SUPABASE_JWT_SECRET       (if auth agent wired Supabase)
+    #   ORTHOGONAL_API_KEY          (required)
+    #   ANTHROPIC_API_KEY           (required)
+    #   ELEVENLABS_API_KEY          (optional — narration)
+    #   SUPABASE_URL                (optional — auth; JWKS fetched from here)
+    #   SUPABASE_PUBLISHABLE_KEY    (optional — new-format anon key)
+    #   SUPABASE_SECRET_KEY         (optional — for backend admin calls)
