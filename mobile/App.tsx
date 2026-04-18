@@ -1,104 +1,159 @@
-// Phase 0 smoke test: one button fires POST /api/roi and renders the
-// ROIResult. Workstreams 3 and 4 replace this with their proper flows.
+// Helios root. Two tabs: Install (Mode A stack) and Live (Mode B dashboard).
+// The Install tab owns the address → onboarding → ticker → result flow.
 
-import { QueryClient, QueryClientProvider, useMutation } from '@tanstack/react-query';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, Text, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { api } from '@/shared/api';
-import { DEMO_PROFILE } from '@/shared/store';
-import type { ROIResult } from '@/shared/types';
+import { LiveDashboard } from '@/modeB/screens/LiveDashboard';
+import type { ModeAStackParamList } from '@/modeA/navigation';
+import { AgentRunning } from '@/modeA/screens/AgentRunning';
+import { OnboardAddress } from '@/modeA/screens/OnboardAddress';
+import { OnboardUtility } from '@/modeA/screens/OnboardUtility';
+import { ROIResult } from '@/modeA/screens/ROIResult';
+import { colors, fontSizes, mono, spacing } from '@/modeA/theme';
 
-const qc = new QueryClient();
+const qc = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 0, staleTime: 1000 * 30 },
+    mutations: { retry: 0 },
+  },
+});
 
-function Home() {
-  const [result, setResult] = useState<ROIResult | null>(null);
-  const mut = useMutation({
-    mutationFn: () => api.roi({ profile: DEMO_PROFILE }),
-    onSuccess: setResult,
-  });
+const Stack = createNativeStackNavigator<ModeAStackParamList>();
+const Tabs = createBottomTabNavigator();
 
+const navTheme = {
+  ...DefaultTheme,
+  dark: true,
+  colors: {
+    ...DefaultTheme.colors,
+    background: colors.bg,
+    card: colors.bg,
+    primary: colors.accent,
+    text: colors.text,
+    border: colors.border,
+    notification: colors.accent,
+  },
+};
+
+function ModeAStack() {
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>Helios</Text>
-        <Text style={styles.subtitle}>home solar economics, in 20 seconds</Text>
+    <Stack.Navigator
+      initialRouteName="OnboardAddress"
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.bg },
+        animation: 'slide_from_right',
+      }}
+    >
+      <Stack.Screen name="OnboardAddress" component={OnboardAddress} />
+      <Stack.Screen name="OnboardUtility" component={OnboardUtility} />
+      <Stack.Screen
+        name="AgentRunning"
+        component={AgentRunning}
+        options={{ gestureEnabled: false, animation: 'fade' }}
+      />
+      <Stack.Screen
+        name="ROIResult"
+        component={ROIResult}
+        options={{ gestureEnabled: false, animation: 'fade' }}
+      />
+    </Stack.Navigator>
+  );
+}
 
-        <Pressable
-          style={[styles.button, mut.isPending && styles.buttonDisabled]}
-          disabled={mut.isPending}
-          onPress={() => mut.mutate()}
-        >
-          {mut.isPending ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Compute ROI (demo)</Text>
-          )}
-        </Pressable>
+function TabIconDot({ focused }: { focused: boolean }) {
+  return (
+    <View
+      style={[
+        styles.tabDot,
+        { backgroundColor: focused ? colors.accent : colors.textDim },
+      ]}
+    />
+  );
+}
 
-        {mut.isError && <Text style={styles.error}>{(mut.error as Error).message}</Text>}
-
-        {result && (
-          <View style={styles.card}>
-            <Text style={styles.hero}>Payback: {result.payback_years} years</Text>
-            <Text style={styles.big}>25-yr NPV: ${result.npv_25yr_usd.toLocaleString()}</Text>
-            <Text style={styles.line}>
-              System: {result.recommended_system.solar_kw} kW + {result.recommended_system.battery_kwh} kWh battery
-            </Text>
-            <Text style={styles.line}>Upfront (net of ITC): ${result.net_upfront_usd.toLocaleString()}</Text>
-            <Text style={styles.line}>CO₂ avoided (25 yr): {result.co2_avoided_tons_25yr} tons</Text>
-            <Text style={styles.line}>Tariff: {result.tariff_summary}</Text>
-            <Text style={styles.sectionHeader}>Orthogonal calls</Text>
-            {result.orthogonal_calls_made.map((c, i) => (
-              <Text key={i} style={styles.call}>
-                {c.status === 'success' ? '✓' : c.status === 'cached' ? '•' : '✗'}  {c.api} — {c.purpose} ({c.latency_ms}ms)
-              </Text>
-            ))}
-          </View>
-        )}
-      </ScrollView>
-      <StatusBar style="auto" />
-    </SafeAreaView>
+function TabLabel({ focused, label }: { focused: boolean; label: string }) {
+  return (
+    <Text
+      style={[
+        styles.tabLabel,
+        { color: focused ? colors.accent : colors.textMuted },
+      ]}
+    >
+      {label}
+    </Text>
   );
 }
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <QueryClientProvider client={qc}>
-        <Home />
-      </QueryClientProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={qc}>
+          <NavigationContainer theme={navTheme}>
+            <Tabs.Navigator
+              screenOptions={{
+                headerShown: false,
+                tabBarStyle: {
+                  backgroundColor: colors.bg,
+                  borderTopColor: colors.border,
+                  borderTopWidth: StyleSheet.hairlineWidth,
+                  height: 72,
+                  paddingTop: 8,
+                },
+                tabBarLabelStyle: {
+                  marginTop: 2,
+                },
+              }}
+            >
+              <Tabs.Screen
+                name="Install"
+                component={ModeAStack}
+                options={{
+                  tabBarIcon: ({ focused }) => <TabIconDot focused={focused} />,
+                  tabBarLabel: ({ focused }) => (
+                    <TabLabel focused={focused} label="install" />
+                  ),
+                }}
+              />
+              <Tabs.Screen
+                name="Live"
+                component={LiveDashboard}
+                options={{
+                  tabBarIcon: ({ focused }) => <TabIconDot focused={focused} />,
+                  tabBarLabel: ({ focused }) => (
+                    <TabLabel focused={focused} label="live" />
+                  ),
+                }}
+              />
+            </Tabs.Navigator>
+          </NavigationContainer>
+          <StatusBar style="light" />
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1a1a1a' },
-  scroll: { padding: 20, gap: 16 },
-  title: { color: '#f5d76e', fontSize: 48, fontWeight: '700', letterSpacing: -1 },
-  subtitle: { color: '#888', fontSize: 16 },
-  button: {
-    backgroundColor: '#f5d76e',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 24,
+  root: { flex: 1, backgroundColor: colors.bg },
+  tabDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#1a1a1a', fontSize: 18, fontWeight: '600' },
-  error: { color: '#ff6b6b', marginTop: 12 },
-  card: {
-    backgroundColor: '#242424',
-    borderRadius: 16,
-    padding: 20,
-    gap: 6,
-    marginTop: 24,
+  tabLabel: {
+    fontSize: fontSizes.xs,
+    fontFamily: mono,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: spacing.xs,
   },
-  hero: { color: '#f5d76e', fontSize: 32, fontWeight: '700' },
-  big: { color: '#fff', fontSize: 24, fontWeight: '600', marginBottom: 8 },
-  line: { color: '#ccc', fontSize: 14 },
-  sectionHeader: { color: '#888', marginTop: 12, marginBottom: 4, fontSize: 12, textTransform: 'uppercase' },
-  call: { color: '#9ec1ff', fontSize: 12, fontFamily: 'Menlo' },
 });
