@@ -1,6 +1,11 @@
 // Typed HTTP client for the Helios backend.
 // Keep fetch signatures 1:1 with backend routes in backend/routes/*.py.
+//
+// Auth: when a Supabase session exists, the cached access_token is
+// automatically attached as `Authorization: Bearer <jwt>`. Anonymous
+// calls (no token) continue to work — backend treats auth as optional.
 
+import { getCurrentAccessToken } from '@/auth/tokenStore';
 import { API_BASE_URL } from './config';
 import type {
   LiveRecommendation,
@@ -20,11 +25,17 @@ export class NarrateUnavailableError extends Error {
   }
 }
 
+function authHeaders(): Record<string, string> {
+  const token = getCurrentAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders(),
       ...(init?.headers ?? {}),
     },
   });
@@ -49,7 +60,11 @@ export const api = {
     const form = new FormData();
     // RN form data accepts this shape; cast to satisfy TS.
     form.append('file', file as unknown as Blob);
-    const res = await fetch(`${API_BASE_URL}/api/parse-bill`, { method: 'POST', body: form });
+    const res = await fetch(`${API_BASE_URL}/api/parse-bill`, {
+      method: 'POST',
+      body: form,
+      headers: authHeaders(),
+    });
     if (!res.ok) throw new Error(await res.text());
     return (await res.json()) as ParseBillResult;
   },
@@ -62,7 +77,7 @@ export const api = {
   narrate: async (body: NarrateBody): Promise<{ uri: string; cached: boolean }> => {
     const res = await fetch(`${API_BASE_URL}/api/narrate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(body),
     });
     if (res.status === 503) {

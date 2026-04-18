@@ -18,10 +18,14 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-notifications"
+      "expo-notifications",
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "extra": {
-      "apiBaseUrl": "http://localhost:8000"
+      "apiBaseUrl": "http://100.112.112.240:8000",
+      "supabaseUrl": "",
+      "supabaseAnonKey": ""
     }
   }
 }

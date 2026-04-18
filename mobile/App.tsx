@@ -10,6 +10,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AuthProvider } from '@/auth/AuthProvider';
+import { LoginScreen } from '@/auth/LoginScreen';
 import { LiveDashboard } from '@/modeB/screens/LiveDashboard';
 import type { ModeAStackParamList } from '@/modeA/navigation';
 import { AgentRunning } from '@/modeA/screens/AgentRunning';
@@ -92,50 +94,68 @@ function TabLabel({ focused, label }: { focused: boolean; label: string }) {
   );
 }
 
+// Tiny "Account" tab. Hosts login/signed-in state. Anonymous demo flow
+// continues to work — this is purely additive.
+function AccountTab() {
+  return <LoginScreen />;
+}
+
 export default function App() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <QueryClientProvider client={qc}>
-          <NavigationContainer theme={navTheme}>
-            <Tabs.Navigator
-              screenOptions={{
-                headerShown: false,
-                tabBarStyle: {
-                  backgroundColor: colors.bg,
-                  borderTopColor: colors.border,
-                  borderTopWidth: StyleSheet.hairlineWidth,
-                  height: 72,
-                  paddingTop: 8,
-                },
-                tabBarLabelStyle: {
-                  marginTop: 2,
-                },
-              }}
-            >
-              <Tabs.Screen
-                name="Install"
-                component={ModeAStack}
-                options={{
-                  tabBarIcon: ({ focused }) => <TabIconDot focused={focused} />,
-                  tabBarLabel: ({ focused }) => (
-                    <TabLabel focused={focused} label="install" />
-                  ),
+          <AuthProvider>
+            <NavigationContainer theme={navTheme}>
+              <Tabs.Navigator
+                screenOptions={{
+                  headerShown: false,
+                  tabBarStyle: {
+                    backgroundColor: colors.bg,
+                    borderTopColor: colors.border,
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    height: 72,
+                    paddingTop: 8,
+                  },
+                  tabBarLabelStyle: {
+                    marginTop: 2,
+                  },
                 }}
-              />
-              <Tabs.Screen
-                name="Live"
-                component={LiveDashboard}
-                options={{
-                  tabBarIcon: ({ focused }) => <TabIconDot focused={focused} />,
-                  tabBarLabel: ({ focused }) => (
-                    <TabLabel focused={focused} label="live" />
-                  ),
-                }}
-              />
-            </Tabs.Navigator>
-          </NavigationContainer>
-          <StatusBar style="light" />
+              >
+                <Tabs.Screen
+                  name="Install"
+                  component={ModeAStack}
+                  options={{
+                    tabBarIcon: ({ focused }) => <TabIconDot focused={focused} />,
+                    tabBarLabel: ({ focused }) => (
+                      <TabLabel focused={focused} label="install" />
+                    ),
+                  }}
+                />
+                <Tabs.Screen
+                  name="Live"
+                  component={LiveDashboard}
+                  options={{
+                    tabBarIcon: ({ focused }) => <TabIconDot focused={focused} />,
+                    tabBarLabel: ({ focused }) => (
+                      <TabLabel focused={focused} label="live" />
+                    ),
+                  }}
+                />
+                <Tabs.Screen
+                  name="Account"
+                  component={AccountTab}
+                  options={{
+                    tabBarIcon: ({ focused }) => <TabIconDot focused={focused} />,
+                    tabBarLabel: ({ focused }) => (
+                      <TabLabel focused={focused} label="account" />
+                    ),
+                  }}
+                />
+              </Tabs.Navigator>
+            </NavigationContainer>
+            <StatusBar style="light" />
+          </AuthProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

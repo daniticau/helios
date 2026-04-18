@@ -34,5 +34,15 @@ class Settings(BaseSettings):
 
     zenpower_csv_path: Path = BACKEND_DIR / "data" / "zenpower_permits.csv"
 
+    # Supabase auth — optional. When unset, all requests are treated as
+    # anonymous and auth middleware becomes a no-op. Keeps the hackathon
+    # demo working with zero provisioning.
+    supabase_url: str = Field(default="")
+    supabase_anon_key: str = Field(default="")
+    # Shared HS256 secret (Supabase's default for legacy JWT verification).
+    # Get from Project Settings → API → JWT Settings → JWT Secret.
+    supabase_jwt_secret: str = Field(default="")
+    supabase_jwt_audience: str = "authenticated"
+
 
 settings = Settings()
