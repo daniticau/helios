@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from orthogonal_client import close as close_orthogonal
-from routes import live, parse_bill, roi
+from routes import geocode, live, parse_bill, roi, roi_stream
 from routes import zenpower as zp_routes
 from zenpower import ZenPowerIndex
 
@@ -48,9 +48,11 @@ app.add_middleware(
 )
 
 app.include_router(roi.router, prefix="/api", tags=["roi"])
+app.include_router(roi_stream.router, prefix="/api", tags=["roi"])
 app.include_router(live.router, prefix="/api", tags=["live"])
 app.include_router(parse_bill.router, prefix="/api", tags=["bill"])
 app.include_router(zp_routes.router, prefix="/api", tags=["zenpower"])
+app.include_router(geocode.router, prefix="/api", tags=["geocode"])
 
 
 @app.get("/")

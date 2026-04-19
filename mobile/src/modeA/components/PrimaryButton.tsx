@@ -1,6 +1,6 @@
 // Reusable primary button with a subtle press feedback.
 
-import { forwardRef } from 'react';
+import { forwardRef, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { PressableProps } from 'react-native';
 
@@ -10,10 +10,11 @@ interface PrimaryButtonProps extends Omit<PressableProps, 'children'> {
   label: string;
   loading?: boolean;
   variant?: 'primary' | 'secondary' | 'ghost';
+  leadingIcon?: ReactNode;
 }
 
 export const PrimaryButton = forwardRef<View, PrimaryButtonProps>(
-  ({ label, loading, variant = 'primary', style, disabled, ...rest }, ref) => {
+  ({ label, loading, variant = 'primary', leadingIcon, style, disabled, ...rest }, ref) => {
     const isDisabled = disabled || loading;
     return (
       <Pressable
@@ -33,16 +34,19 @@ export const PrimaryButton = forwardRef<View, PrimaryButtonProps>(
         {loading ? (
           <ActivityIndicator color={variant === 'primary' ? colors.bg : colors.accent} />
         ) : (
-          <Text
-            style={[
-              styles.label,
-              variant === 'primary' && styles.labelPrimary,
-              variant === 'secondary' && styles.labelSecondary,
-              variant === 'ghost' && styles.labelGhost,
-            ]}
-          >
-            {label}
-          </Text>
+          <View style={styles.content}>
+            {leadingIcon ? <View style={styles.icon}>{leadingIcon}</View> : null}
+            <Text
+              style={[
+                styles.label,
+                variant === 'primary' && styles.labelPrimary,
+                variant === 'secondary' && styles.labelSecondary,
+                variant === 'ghost' && styles.labelGhost,
+              ]}
+            >
+              {label}
+            </Text>
+          </View>
         )}
       </Pressable>
     );
@@ -77,6 +81,16 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  icon: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   label: {
     fontSize: fontSizes.md,

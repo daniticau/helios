@@ -3,18 +3,23 @@
 // Mode A web flow: address → utility → ticker → result.
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Suspense, useCallback, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import { AddressStep } from '@/components/AddressStep';
-import { BreakdownCard } from '@/components/BreakdownCard';
 import { Header } from '@/components/Header';
-import { NPVHeroCard } from '@/components/NPVHeroCard';
 import { OrthogonalTicker } from '@/components/OrthogonalTicker';
+import { ResultScreen } from '@/components/ResultScreen';
 import { SiteFooter } from '@/components/SiteFooter';
 import { UtilityStep } from '@/components/UtilityStep';
+import { saveProfile } from '@/lib/savedProfile';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase';
-import { DEMO_PROFILE, type ROIResult, type UserProfile } from '@/lib/types';
+import {
+  DEMO_PROFILE,
+  type OrthogonalCallLog,
+  type ROIResult,
+  type UserProfile,
+} from '@/lib/types';
 
 type Step = 'address' | 'utility' | 'running' | 'result' | 'error';
 
@@ -47,41 +52,102 @@ function InstallFlow() {
   const [step, setStep] = useState<Step>('address');
   const [profile, setProfile] = useState<UserProfile>(DEMO_PROFILE);
   const [result, setResult] = useState<ROIResult | null>(null);
+  const [calls, setCalls] = useState<OrthogonalCallLog[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const esRef = useRef<EventSource | null>(null);
 
   const fromLogin = params?.get('from') === 'login';
 
-  const runRoi = useCallback(async (p: UserProfile) => {
-    setStep('running');
-    setError(null);
-    try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (isSupabaseConfigured()) {
-        const supabase = createClient();
-        const { data } = await supabase.auth.getSession();
-        if (data.session?.access_token) {
-          headers['Authorization'] = `Bearer ${data.session.access_token}`;
-        }
-      }
-      const res = await fetch('/api/roi', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ profile: p }),
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`${res.status}: ${text}`);
-      }
-      const json = (await res.json()) as ROIResult;
-      setResult(json);
-      setStep('result');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      setStep('error');
-    }
+  const closeStream = useCallback(() => {
+    esRef.current?.close();
+    esRef.current = null;
   }, []);
 
-  const handleAddressContinue = (patch: Partial<UserProfile> & { address: string }) => {
+  useEffect(() => closeStream, [closeStream]);
+
+  const runRoi = useCallback(
+    async (p: UserProfile) => {
+      closeStream();
+      setStep('running');
+      setError(null);
+      setCalls([]);
+      setResult(null);
+      try {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (isSupabaseConfigured()) {
+          const supabase = createClient();
+          const { data } = await supabase.auth.getSession();
+          if (data.session?.access_token) {
+            headers['Authorization'] = `Bearer ${data.session.access_token}`;
+          }
+        }
+        const startRes = await fetch('/api/roi/start', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ profile: p }),
+        });
+        if (!startRes.ok) {
+          const text = await startRes.text();
+          throw new Error(`${startRes.status}: ${text}`);
+        }
+        const { job_id } = (await startRes.json()) as { job_id: string };
+
+        const es = new EventSource(`/api/roi/stream/${encodeURIComponent(job_id)}`);
+        esRef.current = es;
+
+        es.addEventListener('call', (ev) => {
+          try {
+            const log = JSON.parse((ev as MessageEvent).data) as OrthogonalCallLog;
+            setCalls((prev) => [...prev, log]);
+          } catch {
+            // Malformed event — skip silently rather than killing the stream.
+          }
+        });
+
+        es.addEventListener('result', (ev) => {
+          try {
+            const r = JSON.parse((ev as MessageEvent).data) as ROIResult;
+            setResult(r);
+            setStep('result');
+          } catch (e) {
+            setError(e instanceof Error ? e.message : String(e));
+            setStep('error');
+          }
+          closeStream();
+        });
+
+        es.addEventListener('error', (ev) => {
+          // Two cases: (1) backend emitted an SSE 'error' event with data,
+          // (2) connection-level failure (no data on the MessageEvent).
+          const data = (ev as MessageEvent).data;
+          if (data) {
+            try {
+              const parsed = JSON.parse(data) as { message?: string };
+              setError(parsed.message ?? String(data));
+            } catch {
+              setError(String(data));
+            }
+            setStep('error');
+            closeStream();
+            return;
+          }
+          if (es.readyState === EventSource.CLOSED) {
+            setError('stream closed before result arrived');
+            setStep('error');
+            closeStream();
+          }
+        });
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+        setStep('error');
+      }
+    },
+    [closeStream]
+  );
+
+  const handleAddressContinue = (
+    patch: Partial<UserProfile> & { address: string; lat: number; lng: number }
+  ) => {
     setProfile((p) => ({ ...p, ...patch }));
     setStep('utility');
   };
@@ -94,6 +160,8 @@ function InstallFlow() {
   const handleUtilitySubmit = (patch: Partial<UserProfile>) => {
     const merged: UserProfile = { ...profile, ...patch } as UserProfile;
     setProfile(merged);
+    // Persist so /live hydrates with this user's real profile next time.
+    saveProfile(merged);
     runRoi(merged);
   };
 
@@ -159,12 +227,12 @@ function InstallFlow() {
               className="space-y-8"
             >
               <RunningHero />
-              <OrthogonalTicker calls={[]} isRunning={true} />
+              <OrthogonalTicker calls={calls} isRunning={true} live />
             </motion.section>
           )}
 
           {step === 'result' && result && (
-            <ResultView
+            <ResultScreen
               result={result}
               profile={profile}
               onRunAgain={() => {
@@ -279,155 +347,10 @@ function RunningHero() {
       </h2>
       <p className="max-w-xl text-[15px] leading-[1.6] text-[color:var(--color-text-muted)]">
         Tariff, weather, permits, pricing, financing, rebate news, property value,
-        demographics, installer reviews, carbon price. One Orthogonal SDK,
+        demographics, installer reviews, carbon price. One unified SDK,
         parallel fan-out. Latencies below are the actual wire times.
       </p>
     </div>
   );
 }
 
-// ------- result view -------
-
-function ResultView({
-  result,
-  profile,
-  onRunAgain,
-}: {
-  result: ROIResult;
-  profile: UserProfile;
-  onRunAgain: () => void;
-}) {
-  return (
-    <motion.section
-      key="result"
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
-    >
-      <NPVHeroCard
-        paybackYears={result.payback_years}
-        npv25yrUsd={result.npv_25yr_usd}
-        annualSavingsYr1={result.annual_savings_yr1_usd}
-      />
-
-      {/* recommended system */}
-      <div className="rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card)]/70 px-5 py-6">
-        <div className="type-eyebrow">recommended system</div>
-        <div className="mt-5 flex flex-wrap items-end gap-5">
-          <SystemFigure value={result.recommended_system.solar_kw.toFixed(1)} unit="kW" />
-          <span
-            className="mb-3 text-[color:var(--color-text-dim)]"
-            style={{ fontFamily: 'var(--font-mono)', fontSize: 20 }}
-          >
-            +
-          </span>
-          <SystemFigure value={result.recommended_system.battery_kwh.toFixed(1)} unit="kWh" />
-        </div>
-        <div
-          className="mt-5 text-[13px] leading-6 text-[color:var(--color-text-muted)]"
-          style={{ fontFamily: 'var(--font-mono)' }}
-        >
-          Covers{' '}
-          <span className="text-[color:var(--color-text)]">
-            {profile.monthly_kwh.toFixed(0)} kWh
-          </span>{' '}
-          per month. Battery sized for peak-hour NEM 3.0 arbitrage.
-        </div>
-      </div>
-
-      {/* ZenPower credibility */}
-      {result.zenpower_permits_in_zip != null && (
-        <div className="relative rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card)]/50 px-5 py-4">
-          <div className="type-eyebrow type-eyebrow-accent">
-            zenpower permits · your zip
-          </div>
-          <div
-            className="mt-2 text-[14.5px] leading-6 text-[color:var(--color-text)]"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
-            <span className="text-[color:var(--color-accent)]">
-              {result.zenpower_permits_in_zip}
-            </span>{' '}
-            recent installs in your ZIP averaging{' '}
-            <span className="text-[color:var(--color-accent)]">
-              {result.zenpower_avg_system_kw?.toFixed(1)} kW
-            </span>
-            .
-          </div>
-        </div>
-      )}
-
-      <BreakdownCard
-        upfrontCostUsd={result.upfront_cost_usd}
-        federalItcUsd={result.federal_itc_usd}
-        netUpfrontUsd={result.net_upfront_usd}
-        annualSavingsYr1Usd={result.annual_savings_yr1_usd}
-        co2AvoidedTons25yr={result.co2_avoided_tons_25yr}
-        socialCostOfCarbonUsd={result.social_cost_of_carbon_usd}
-        roiPctOfHomeValue={result.roi_pct_of_home_value}
-        installerQuotesRange={result.installer_quotes_range}
-        financingAprRange={result.financing_apr_range}
-      />
-
-      {/* Tariff */}
-      <div className="rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card)]/50 px-5 py-4">
-        <div className="type-eyebrow">tariff</div>
-        <div
-          className="mt-2 text-[13px] leading-[1.6] text-[color:var(--color-text)]"
-          style={{ fontFamily: 'var(--font-mono)' }}
-        >
-          {result.tariff_summary}
-        </div>
-      </div>
-
-      {/* Ticker recap */}
-      <div className="space-y-3">
-        <div className="type-eyebrow">what we looked up</div>
-        <div className="rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card)]/40 p-3">
-          <OrthogonalTicker
-            calls={result.orthogonal_calls_made}
-            isRunning={false}
-            compact
-          />
-        </div>
-      </div>
-
-      <button
-        type="button"
-        onClick={onRunAgain}
-        className="group relative flex w-full items-center justify-between overflow-hidden rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)]/80 px-6 py-4 text-[12.5px] text-[color:var(--color-text)] transition hover:border-[color:var(--color-accent)]"
-        style={{ fontFamily: 'var(--font-mono)' }}
-      >
-        <span>run again</span>
-        <span className="text-[color:var(--color-accent)]">→</span>
-      </button>
-    </motion.section>
-  );
-}
-
-function SystemFigure({ value, unit }: { value: string; unit: string }) {
-  return (
-    <div className="flex items-end gap-2">
-      <span
-        className="tabular-nums text-[color:var(--color-text)]"
-        style={{
-          fontFamily: 'var(--font-display)',
-          fontVariationSettings: '"opsz" 144',
-          fontSize: 56,
-          fontWeight: 600,
-          letterSpacing: '-0.04em',
-          lineHeight: 0.9,
-        }}
-      >
-        {value}
-      </span>
-      <span
-        className="mb-2 text-[15px] text-[color:var(--color-accent)]"
-        style={{ fontFamily: 'var(--font-mono)' }}
-      >
-        {unit}
-      </span>
-    </div>
-  );
-}

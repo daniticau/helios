@@ -29,12 +29,24 @@ const UTILITIES: ReadonlyArray<{ code: UtilityCode; label: string }> = [
   { code: 'LADWP', label: 'LADWP' },
 ];
 
-function parsePositiveNumber(input: string): number | null {
-  const trimmed = input.trim().replace(/[^0-9.]/g, '');
-  if (trimmed === '' || trimmed === '.') return null;
-  const n = Number(trimmed);
-  return Number.isFinite(n) && n > 0 ? n : null;
+interface ParsedRange {
+  value: number | null;
+  outOfRange: boolean;
 }
+
+function parseRanged(input: string, min: number, max: number): ParsedRange {
+  const trimmed = input.trim().replace(/[^0-9.]/g, '');
+  if (trimmed === '' || trimmed === '.') return { value: null, outOfRange: false };
+  const n = Number(trimmed);
+  if (!Number.isFinite(n) || n <= 0) return { value: null, outOfRange: false };
+  if (n < min || n > max) return { value: null, outOfRange: true };
+  return { value: n, outOfRange: false };
+}
+
+const BILL_MIN = 5;
+const BILL_MAX = 2000;
+const KWH_MIN = 50;
+const KWH_MAX = 5000;
 
 export function OnboardUtility({ navigation }: ModeAScreenProps<'OnboardUtility'>) {
   const profile = useProfileStore((s) => s.profile);
@@ -57,19 +69,19 @@ export function OnboardUtility({ navigation }: ModeAScreenProps<'OnboardUtility'
     if (!profile) setProfile(DEMO_PROFILE);
   }, [profile, setProfile]);
 
-  const bill = parsePositiveNumber(billText);
-  const kwh = parsePositiveNumber(kwhText);
-  const canCompute = bill !== null && kwh !== null;
+  const billParse = parseRanged(billText, BILL_MIN, BILL_MAX);
+  const kwhParse = parseRanged(kwhText, KWH_MIN, KWH_MAX);
+  const canCompute = billParse.value !== null && kwhParse.value !== null;
 
   const goCompute = () => {
-    if (!canCompute) return;
+    if (!canCompute || billParse.value === null || kwhParse.value === null) return;
     Keyboard.dismiss();
     const base = profile ?? DEMO_PROFILE;
     setProfile({
       ...base,
       utility,
-      monthly_bill_usd: bill,
-      monthly_kwh: kwh,
+      monthly_bill_usd: billParse.value,
+      monthly_kwh: kwhParse.value,
     });
     navigation.navigate('AgentRunning');
   };
@@ -138,6 +150,11 @@ export function OnboardUtility({ navigation }: ModeAScreenProps<'OnboardUtility'
                 onSubmitEditing={() => kwhRef.current?.focus()}
               />
             </View>
+            {billParse.outOfRange ? (
+              <Text style={styles.hintError}>
+                typical range: ${BILL_MIN}–${BILL_MAX}
+              </Text>
+            ) : null}
           </View>
 
           <View style={styles.block}>
@@ -156,9 +173,15 @@ export function OnboardUtility({ navigation }: ModeAScreenProps<'OnboardUtility'
               />
               <Text style={styles.suffix}>kWh</Text>
             </View>
-            <Text style={styles.hint}>
-              A rough number is fine. We extrapolate from monthly on the backend.
-            </Text>
+            {kwhParse.outOfRange ? (
+              <Text style={styles.hintError}>
+                typical range: {KWH_MIN}–{KWH_MAX} kWh
+              </Text>
+            ) : (
+              <Text style={styles.hint}>
+                A rough number is fine. We extrapolate from monthly on the backend.
+              </Text>
+            )}
           </View>
         </ScrollView>
 
@@ -269,6 +292,12 @@ const styles = StyleSheet.create({
   },
   hint: {
     color: colors.textDim,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 4,
+  },
+  hintError: {
+    color: colors.error,
     fontSize: 12,
     lineHeight: 18,
     marginTop: 4,

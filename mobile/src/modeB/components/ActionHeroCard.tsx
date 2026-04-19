@@ -33,17 +33,6 @@ export function ActionHeroCard({ rec }: Props) {
       </View>
 
       <Text style={styles.reasoning}>{rec.reasoning}</Text>
-
-      <View style={styles.ratesRow}>
-        <View style={styles.rateCell}>
-          <Text style={styles.rateLabel}>Retail now</Text>
-          <Text style={styles.rateValue}>${rec.retail_rate_now.toFixed(2)}/kWh</Text>
-        </View>
-        <View style={styles.rateCell}>
-          <Text style={styles.rateLabel}>Export now</Text>
-          <Text style={styles.rateValue}>${rec.export_rate_now.toFixed(2)}/kWh</Text>
-        </View>
-      </View>
     </View>
   );
 }
@@ -64,15 +53,4 @@ const styles = StyleSheet.create({
   gain: { fontSize: 44, fontWeight: '800', letterSpacing: -1 },
   gainSub: { color: COLORS.textMuted, fontSize: 14, marginBottom: 10 },
   reasoning: { color: COLORS.text, fontSize: 15, lineHeight: 22, marginTop: 4 },
-  ratesRow: {
-    flexDirection: 'row',
-    gap: 16,
-    marginTop: 12,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  rateCell: { flex: 1 },
-  rateLabel: { color: COLORS.textDim, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.8 },
-  rateValue: { color: COLORS.text, fontSize: 18, fontWeight: '600', marginTop: 4 },
 });

@@ -37,9 +37,40 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+export interface GeocodeResult {
+  lat: number;
+  lng: number;
+  display_name: string;
+  zip?: string | null;
+  state?: string | null;
+}
+
 export const api = {
+  geocode: (q: string) =>
+    request<GeocodeResult>('/api/geocode', {
+      method: 'POST',
+      body: JSON.stringify({ q }),
+    }),
+
   roi: (body: ROIRequest) =>
     request<ROIResult>('/api/roi', { method: 'POST', body: JSON.stringify(body) }),
+
+  // Streaming variant: kicks off a job and returns its id. Subscribe to
+  // /api/roi/stream/{id} via SSE to receive per-source events live.
+  roiStart: (body: ROIRequest) =>
+    request<{ job_id: string }>('/api/roi/start', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  // Re-fire one source on an existing job. The fresh log is pushed
+  // onto the same SSE stream; a 410 means the grace window closed and
+  // the caller should restart via roiStart.
+  roiRetry: (jobId: string, sourceId: string) =>
+    request<{ status: string; source_id: string }>(
+      `/api/roi/retry/${encodeURIComponent(jobId)}`,
+      { method: 'POST', body: JSON.stringify({ source_id: sourceId }) }
+    ),
 
   live: (body: LiveStateRequest) =>
     request<LiveRecommendation>('/api/live', { method: 'POST', body: JSON.stringify(body) }),

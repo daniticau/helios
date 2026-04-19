@@ -31,7 +31,7 @@ const inter = Inter_Tight({
 export const metadata: Metadata = {
   title: 'Helios · solar economics in 20 seconds',
   description:
-    'Home solar ROI in the time it takes to type an address. 10 paid APIs fired in parallel through one Orthogonal SDK — tariff, weather, permits, financing, property value, demographics, reviews, carbon price.',
+    'Home solar ROI in the time it takes to type an address. 10 paid APIs fired in parallel through one unified integration — tariff, weather, permits, financing, property value, demographics, reviews, carbon price.',
   metadataBase: new URL('https://helios.daniticau.com'),
   openGraph: {
     title: 'Helios · solar economics in 20 seconds',

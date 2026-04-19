@@ -41,6 +41,7 @@ export function Header() {
     '?';
 
   const installActive = pathname?.startsWith('/install');
+  const liveActive = pathname?.startsWith('/live');
   const loginActive = pathname?.startsWith('/login');
 
   return (
@@ -69,6 +70,17 @@ export function Header() {
             }`}
           >
             install
+          </Link>
+
+          <Link
+            href="/live"
+            className={`text-xs transition ${
+              liveActive
+                ? 'text-[color:var(--color-accent)]'
+                : 'text-[color:var(--color-text-muted)] hover:text-[color:var(--color-text)]'
+            }`}
+          >
+            live
           </Link>
 
           {loading ? (

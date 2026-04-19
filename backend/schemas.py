@@ -57,6 +57,10 @@ class OrthogonalCallLog(BaseModel):
     latency_ms: int
     status: OrthogonalStatus
     error_message: str | None = None
+    # Stable id used to dedupe streamed logs and address a single source
+    # for retry (see POST /api/roi/retry/{job_id}). Optional only for
+    # back-compat with any code path that manually constructs a log.
+    source_id: str | None = None
 
 
 class ROIResult(BaseModel):
@@ -78,6 +82,11 @@ class ROIResult(BaseModel):
     zenpower_permits_in_zip: int | None = None
     zenpower_avg_system_kw: float | None = None
     social_cost_of_carbon_usd: float | None = None
+    # Names of sources whose live Orthogonal parse failed and fell back to
+    # documented defaults (installer_pricing, financing, property_value,
+    # carbon_price). The UI surfaces a `via fallback` chip on affected
+    # numbers so judges can tell live values from defaults at a glance.
+    fallbacks_used: list[str] = Field(default_factory=list)
 
 
 class HouseholdState(BaseModel):

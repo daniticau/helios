@@ -65,6 +65,45 @@ export interface ROIResult {
   zenpower_permits_in_zip?: number;
   zenpower_avg_system_kw?: number;
   social_cost_of_carbon_usd?: number;
+  // Sources whose live Orthogonal parse failed and fell back to a
+  // documented default. Possible values: 'installer_pricing',
+  // 'financing', 'property_value', 'carbon_price'.
+  fallbacks_used?: string[];
+}
+
+export interface HouseholdState {
+  battery_soc_pct: number;
+  solar_kw_now: number;
+  load_kw_now: number;
+  timestamp: string; // ISO
+}
+
+export interface LiveStateRequest {
+  profile: UserProfile;
+  current_state: HouseholdState;
+}
+
+export interface ForecastPoint {
+  hour_offset: number;
+  retail_rate: number;
+  export_rate: number;
+  solar_kw_forecast: number;
+}
+
+export interface PeakWindow {
+  start_iso: string;
+  expected_rate: number;
+}
+
+export interface LiveRecommendation {
+  action: LiveAction;
+  reasoning: string;
+  expected_hourly_gain_usd: number;
+  retail_rate_now: number;
+  export_rate_now: number;
+  next_peak_window?: PeakWindow;
+  forecast_24h: ForecastPoint[];
+  orthogonal_calls_made: OrthogonalCallLog[];
 }
 
 export const DEMO_PROFILE: UserProfile = {

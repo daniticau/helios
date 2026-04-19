@@ -1,8 +1,8 @@
 'use client';
 
-// Magic link + GitHub OAuth via Supabase. When Supabase isn't configured,
-// surface a placeholder banner but keep the layout present — auth handlers
-// are no-ops.
+// Email + password auth via Supabase. Users toggle between "sign in"
+// and "create account". When Supabase isn't configured, surface a
+// placeholder banner and keep handlers as inline-error no-ops.
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -12,7 +12,8 @@ import { Header } from '@/components/Header';
 import { SiteFooter } from '@/components/SiteFooter';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase';
 
-type Status = 'idle' | 'sending' | 'sent' | 'error';
+type Mode = 'signin' | 'signup';
+type Status = 'idle' | 'submitting' | 'confirm' | 'error';
 
 export default function LoginPage() {
   return (
@@ -32,7 +33,9 @@ function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const redirect = params?.get('redirect') ?? '/install?from=login';
+  const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
   const configured = isSupabaseConfigured();
@@ -45,7 +48,7 @@ function LoginForm() {
     });
   }, [configured, redirect, router]);
 
-  const handleMagicLink = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!configured) {
       setError(
@@ -54,45 +57,58 @@ function LoginForm() {
       setStatus('error');
       return;
     }
-    if (!email.trim()) return;
-    setStatus('sending');
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) return;
+    if (mode === 'signup' && password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      setStatus('error');
+      return;
+    }
+
+    setStatus('submitting');
     setError(null);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
+      if (mode === 'signin') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: trimmedEmail,
+          password,
+        });
+        if (error) throw error;
+        router.replace(redirect);
+        return;
+      }
+      // Sign up
+      const { data, error } = await supabase.auth.signUp({
+        email: trimmedEmail,
+        password,
         options: {
           emailRedirectTo: `${window.location.origin}${redirect}`,
         },
       });
       if (error) throw error;
-      setStatus('sent');
+      // If email confirmation is disabled in Supabase, a session is
+      // returned and we can route straight through. Otherwise the user
+      // gets a confirmation email.
+      if (data.session) {
+        router.replace(redirect);
+      } else {
+        setStatus('confirm');
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setStatus('error');
     }
   };
 
-  const handleGithub = async () => {
-    if (!configured) {
-      setError(
-        'Auth not configured. Set NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local.'
-      );
-      setStatus('error');
-      return;
-    }
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: { redirectTo: `${window.location.origin}${redirect}` },
-      });
-      if (error) throw error;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      setStatus('error');
-    }
+  const toggleMode = () => {
+    setMode((m) => (m === 'signin' ? 'signup' : 'signin'));
+    setStatus('idle');
+    setError(null);
   };
+
+  const submitting = status === 'submitting';
+  const submitLabel = mode === 'signin' ? 'sign in' : 'create account';
 
   return (
     <div className="min-h-screen">
@@ -132,80 +148,95 @@ function LoginForm() {
                 </div>
               )}
 
-              {/* GitHub */}
-              <button
-                type="button"
-                onClick={handleGithub}
-                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)]/70 px-6 py-4 text-[12.5px] text-[color:var(--color-text)] transition hover:border-[color:var(--color-accent)]"
+              {/* Mode toggle */}
+              <div
+                className="mb-7 flex gap-2 rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/40 p-1"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
-                <svg className="relative z-10 h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0022 12.017C22 6.484 17.523 2 12 2z"
-                  />
-                </svg>
-                <span className="relative z-10">continue · github</span>
-              </button>
-
-              {/* divider */}
-              <div className="my-7 flex items-center gap-3">
-                <div className="h-px flex-1 bg-[color:var(--color-border)]" />
-                <span
-                  className="text-[11px] text-[color:var(--color-text-dim)]"
-                  style={{ fontFamily: 'var(--font-mono)' }}
+                <button
+                  type="button"
+                  onClick={() => mode !== 'signin' && toggleMode()}
+                  aria-pressed={mode === 'signin'}
+                  className={`flex-1 rounded-sm px-4 py-2 text-[12px] transition ${
+                    mode === 'signin'
+                      ? 'bg-[color:var(--color-card-elevated)] text-[color:var(--color-accent)]'
+                      : 'text-[color:var(--color-text-muted)] hover:text-[color:var(--color-text)]'
+                  }`}
                 >
-                  or
-                </span>
-                <div className="h-px flex-1 bg-[color:var(--color-border)]" />
+                  sign in
+                </button>
+                <button
+                  type="button"
+                  onClick={() => mode !== 'signup' && toggleMode()}
+                  aria-pressed={mode === 'signup'}
+                  className={`flex-1 rounded-sm px-4 py-2 text-[12px] transition ${
+                    mode === 'signup'
+                      ? 'bg-[color:var(--color-card-elevated)] text-[color:var(--color-accent)]'
+                      : 'text-[color:var(--color-text-muted)] hover:text-[color:var(--color-text)]'
+                  }`}
+                >
+                  create account
+                </button>
               </div>
 
-              {/* email */}
-              {status === 'sent' ? (
+              {status === 'confirm' ? (
                 <div
                   className="rounded-sm border border-[color:var(--color-success)]/40 bg-[color:var(--color-card)]/60 p-5"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   <div className="type-eyebrow" style={{ color: 'var(--color-success)' }}>
-                    magic link sent
+                    confirm your email
                   </div>
                   <div className="mt-2 text-[14px] text-[color:var(--color-text)]">
                     Check <span className="text-[color:var(--color-accent)]">{email}</span>{' '}
-                    for a link to sign in.
+                    for a confirmation link, then sign in.
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleMagicLink} className="space-y-3">
-                  {/* Label text is literally "email" so Playwright's
-                      getByLabel(/^email$/) matches without whitespace noise. */}
-                  <label htmlFor="email" className="type-label block">
-                    email
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    // Explicit aria-label guarantees the accessible name is
-                    // exactly "email" regardless of how the visual label
-                    // resolves through the a11y tree — so Playwright's
-                    // getByLabel(/^email$/) is deterministic.
-                    aria-label="email"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@domain.com"
-                    className="w-full rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/50 px-4 py-3.5 text-[14px] text-[color:var(--color-text)] placeholder:text-[color:var(--color-text-dim)] focus:border-[color:var(--color-accent)] focus:outline-none"
-                    style={{ fontFamily: 'var(--font-mono)' }}
-                  />
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="email" className="type-label block">
+                      email
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      aria-label="email"
+                      required
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@domain.com"
+                      className="w-full rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/50 px-4 py-3.5 text-[14px] text-[color:var(--color-text)] placeholder:text-[color:var(--color-text-dim)] focus:border-[color:var(--color-accent)] focus:outline-none"
+                      style={{ fontFamily: 'var(--font-mono)' }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="password" className="type-label block">
+                      password
+                    </label>
+                    <input
+                      id="password"
+                      type="password"
+                      aria-label="password"
+                      required
+                      minLength={mode === 'signup' ? 8 : undefined}
+                      autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={mode === 'signup' ? 'min 8 characters' : '••••••••'}
+                      className="w-full rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/50 px-4 py-3.5 text-[14px] text-[color:var(--color-text)] placeholder:text-[color:var(--color-text-dim)] focus:border-[color:var(--color-accent)] focus:outline-none"
+                      style={{ fontFamily: 'var(--font-mono)' }}
+                    />
+                  </div>
                   <button
                     type="submit"
-                    disabled={status === 'sending'}
+                    disabled={submitting}
                     className="group relative flex w-full items-center justify-between overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-6 py-3.5 text-[12.5px] font-semibold text-[color:var(--color-bg)] disabled:opacity-40"
                     style={{ fontFamily: 'var(--font-mono)' }}
                   >
                     <span className="relative z-10">
-                      {status === 'sending' ? 'sending…' : 'send magic link'}
+                      {submitting ? 'working…' : submitLabel}
                     </span>
                     <span className="relative z-10 text-lg">→</span>
                     <span className="absolute inset-0 -translate-x-full bg-[color:var(--color-accent-warm)] transition-transform duration-500 group-enabled:group-hover:translate-x-0" />

@@ -45,6 +45,7 @@ export interface OrthogonalCallLog {
   latency_ms: number;
   status: OrthogonalStatus;
   error_message?: string;
+  source_id?: string;
 }
 
 export interface ROIResult {
@@ -65,6 +66,7 @@ export interface ROIResult {
   zenpower_permits_in_zip?: number;
   zenpower_avg_system_kw?: number;
   social_cost_of_carbon_usd?: number;
+  fallbacks_used?: string[];
 }
 
 export interface HouseholdState {

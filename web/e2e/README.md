@@ -6,7 +6,7 @@ Playwright suite for the Next.js webapp. Covers the critical journeys:
 |---|---|
 | `landing.spec.ts` | Landing page loads, hero headline, install CTA routes to `/install`, ticker viz renders, footer GitHub link. |
 | `install.spec.ts` | Address → utility → result flow. Utility picker, numeric bill/kWh inputs, `/api/roi` POST payload shape, NPV + payback render on the result screen. |
-| `login.spec.ts` | Placeholder banner when Supabase env vars unset, GitHub + magic-link controls, "continue without signing in" deep link. |
+| `login.spec.ts` | Placeholder banner when Supabase env vars unset, email+password sign-in/sign-up toggle, "continue without signing in" deep link. |
 | `proxy.spec.ts` | `/api/roi` Next route handler: method restrictions and backend-unreachable error envelope. |
 
 ## Prerequisites

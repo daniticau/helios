@@ -9,17 +9,23 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import type { ROIResult as ROIResultT } from '@/shared/types';
 
-import { BreakdownCard } from '../components/BreakdownCard';
+import { AlertBanner } from '../components/AlertBanner';
+import { CostsCard } from '../components/CostsCard';
+import { ImpactCard } from '../components/ImpactCard';
 import { NPVHeroCard } from '../components/NPVHeroCard';
 import { OrthogonalTicker } from '../components/OrthogonalTicker';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SystemSizeCard } from '../components/SystemSizeCard';
 import { ZenPowerCredibilityLine } from '../components/ZenPowerCredibilityLine';
 import type { ModeAScreenProps } from '../navigation';
-import { colors, fontSizes, mono, radius, spacing } from '../theme';
+import { colors, mono, radius, spacing } from '../theme';
 
 export function ROIResult({ route, navigation }: ModeAScreenProps<'ROIResult'>) {
   const result: ROIResultT = route.params.result;
+  const failedSources = result.orthogonal_calls_made.filter(
+    (c) => c.status === 'error'
+  );
+  const failedNames = failedSources.map((c) => c.api);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -37,7 +43,10 @@ export function ROIResult({ route, navigation }: ModeAScreenProps<'ROIResult'>) 
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(120).duration(420)}>
-          <SystemSizeCard system={result.recommended_system} />
+          <SystemSizeCard
+            system={result.recommended_system}
+            tariffSummary={result.tariff_summary}
+          />
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(180).duration(420)}>
@@ -47,25 +56,35 @@ export function ROIResult({ route, navigation }: ModeAScreenProps<'ROIResult'>) 
           />
         </Animated.View>
 
+        {failedSources.length > 0 ? (
+          <Animated.View entering={FadeInUp.delay(200).duration(420)}>
+            <AlertBanner
+              variant="warning"
+              title={`Using fallback data for ${failedSources.length} source${
+                failedSources.length === 1 ? '' : 's'
+              }`}
+              detail={`${failedNames.join(', ')} · Numbers below use regional averages where APIs failed.`}
+            />
+          </Animated.View>
+        ) : null}
+
         <Animated.View entering={FadeInUp.delay(220).duration(420)}>
-          <BreakdownCard
+          <CostsCard
             upfrontCostUsd={result.upfront_cost_usd}
             federalItcUsd={result.federal_itc_usd}
             netUpfrontUsd={result.net_upfront_usd}
-            annualSavingsYr1Usd={result.annual_savings_yr1_usd}
-            co2AvoidedTons25yr={result.co2_avoided_tons_25yr}
-            socialCostOfCarbonUsd={result.social_cost_of_carbon_usd}
-            roiPctOfHomeValue={result.roi_pct_of_home_value}
             installerQuotesRange={result.installer_quotes_range}
             financingAprRange={result.financing_apr_range}
           />
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(260).duration(420)}>
-          <View style={styles.tariffCard}>
-            <Text style={styles.tariffLabel}>tariff</Text>
-            <Text style={styles.tariffText}>{result.tariff_summary}</Text>
-          </View>
+          <ImpactCard
+            annualSavingsYr1Usd={result.annual_savings_yr1_usd}
+            co2AvoidedTons25yr={result.co2_avoided_tons_25yr}
+            socialCostOfCarbonUsd={result.social_cost_of_carbon_usd}
+            roiPctOfHomeValue={result.roi_pct_of_home_value}
+          />
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(300).duration(420)} style={styles.recapBlock}>
@@ -96,29 +115,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
     paddingBottom: spacing.xxl,
-    gap: spacing.md,
-  },
-  tariffCard: {
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 6,
-  },
-  tariffLabel: {
-    color: colors.textMuted,
-    fontSize: 13,
-    letterSpacing: 0.4,
-    fontWeight: '500',
-  },
-  tariffText: {
-    color: colors.text,
-    fontSize: fontSizes.sm,
-    fontFamily: mono,
-    lineHeight: 20,
+    gap: spacing.lg,
   },
   recapBlock: {
     gap: 4,

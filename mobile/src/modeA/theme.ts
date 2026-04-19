@@ -41,6 +41,10 @@ export const radius = {
   xl: 24,
 } as const;
 
+// Height of the custom animated tab bar. Screens should pad by
+// `tabBarHeight + safeArea.bottom` at the bottom to avoid content overlap.
+export const tabBarHeight = 84;
+
 export const fontSizes = {
   xs: 11,
   sm: 13,

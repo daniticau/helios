@@ -11,7 +11,7 @@
 // bouncing.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -49,6 +49,19 @@ interface OrthogonalTickerProps {
   isRunning: boolean;
   /** Compact mode for the results screen summary. */
   compact?: boolean;
+  /**
+   * Live mode: rows enter as their `call` data arrives — no fake stagger.
+   * Used during real SSE streaming where wire timing IS the timing.
+   */
+  live?: boolean;
+  /**
+   * If provided, error rows render a small "retry" affordance that
+   * invokes this callback with the source's stable id. Usually wired
+   * to `useROIStream().retrySource`.
+   */
+  onRetry?: (sourceId: string) => void;
+  /** Source ids currently being re-fetched — rendered as pending. */
+  retryingSources?: ReadonlySet<string>;
 }
 
 type SlotState = {
@@ -79,60 +92,62 @@ const TOTAL_REVEAL_MS_MIN = 2600;
 const TOTAL_REVEAL_MS_MAX = 5200;
 const ROW_STAGGER_MIN_MS = 140;
 
-function buildSlots(calls: readonly OrthogonalCallLog[]): SlotState[] {
-  // Pair each slot with its real call (matched by api name). Unknown APIs
-  // from the backend append after the known slots so nothing is dropped.
-  const byApi = new Map<string, OrthogonalCallLog>();
-  for (const c of calls) byApi.set(c.api, c);
-
-  const baseSlots: Array<Omit<SlotState, 'revealDelayMs'>> = EXPECTED_SLOTS.map(
-    ({ api, purpose }) => ({
+function buildSlots(
+  calls: readonly OrthogonalCallLog[],
+  live: boolean
+): SlotState[] {
+  // No calls yet → render EXPECTED_SLOTS as placeholder rows. Distinct api
+  // values make keys safe.
+  if (calls.length === 0) {
+    return EXPECTED_SLOTS.map(({ api, purpose }) => ({
       key: api,
       api,
       purpose,
-      call: byApi.get(api) ?? null,
-    })
-  );
-  for (const c of calls) {
-    if (!EXPECTED_SLOTS.some((s) => s.api === c.api)) {
-      baseSlots.push({ key: c.api, api: c.api, purpose: c.purpose, call: c });
-    }
+      call: null,
+      revealDelayMs: 0,
+    }));
   }
 
-  // Sort resolved calls by latency ascending, and map their rank to reveal
-  // delay. Unresolved rows reveal at the tail. If nothing resolved yet,
-  // delays are 0 (renders pending ladder immediately).
-  const resolved = baseSlots
-    .filter((s) => s.call !== null)
-    .map((s) => s.call!)
-    .sort((a, b) => a.latency_ms - b.latency_ms);
+  // Backend sends `api` as a provider name ("Linkup", "Precip AI", …),
+  // with multiple calls sharing the same provider. Prefer `source_id` for
+  // key stability so retries reuse the existing row; fall back to index
+  // for older logs that predate the source_id wire field.
+  const baseSlots = calls.map((c, i) => ({
+    key: c.source_id ? `src-${c.source_id}` : `${i}-${c.api}`,
+    api: c.api,
+    purpose: c.purpose,
+    call: c,
+  }));
 
-  if (resolved.length === 0) {
+  if (live) {
     return baseSlots.map((s) => ({ ...s, revealDelayMs: 0 }));
   }
 
-  const maxLatency = resolved[resolved.length - 1]!.latency_ms;
-  const minLatency = resolved[0]!.latency_ms;
+  const sortedIndices = baseSlots
+    .map((_, i) => i)
+    .sort((a, b) => baseSlots[a]!.call.latency_ms - baseSlots[b]!.call.latency_ms);
+
+  const maxLatency = baseSlots[sortedIndices[sortedIndices.length - 1]!]!.call.latency_ms;
+  const minLatency = baseSlots[sortedIndices[0]!]!.call.latency_ms;
   const spanLatency = Math.max(1, maxLatency - minLatency);
   const totalReveal = Math.min(
     TOTAL_REVEAL_MS_MAX,
     Math.max(TOTAL_REVEAL_MS_MIN, maxLatency * 0.9)
   );
 
-  const delayByApi = new Map<string, number>();
-  resolved.forEach((call, idx) => {
-    // Blend: mostly-latency-rank ordering, with a minimum stagger so rows
-    // never step on each other.
+  const delayByIndex = new Map<number, number>();
+  sortedIndices.forEach((origIdx, rank) => {
+    const call = baseSlots[origIdx]!.call;
     const latencyFrac = (call.latency_ms - minLatency) / spanLatency;
-    const rankFrac = resolved.length > 1 ? idx / (resolved.length - 1) : 0;
+    const rankFrac = sortedIndices.length > 1 ? rank / (sortedIndices.length - 1) : 0;
     const blended = 0.65 * latencyFrac + 0.35 * rankFrac;
-    const delay = Math.max(idx * ROW_STAGGER_MIN_MS, blended * totalReveal);
-    delayByApi.set(call.api, delay);
+    const delay = Math.max(rank * ROW_STAGGER_MIN_MS, blended * totalReveal);
+    delayByIndex.set(origIdx, delay);
   });
 
-  return baseSlots.map((s) => ({
+  return baseSlots.map((s, i) => ({
     ...s,
-    revealDelayMs: s.call ? delayByApi.get(s.call.api) ?? 0 : totalReveal + 200,
+    revealDelayMs: delayByIndex.get(i) ?? 0,
   }));
 }
 
@@ -142,11 +157,15 @@ function TickerRow({
   hasData,
   isRunning,
   compact,
+  onRetry,
+  isRetrying,
 }: {
   slot: SlotState;
   hasData: boolean;
   isRunning: boolean;
   compact: boolean;
+  onRetry?: (sourceId: string) => void;
+  isRetrying?: boolean;
 }) {
   const translateX = useSharedValue(hasData ? 0 : 32);
   const opacity = useSharedValue(hasData ? 1 : 0);
@@ -175,9 +194,18 @@ function TickerRow({
     opacity: opacity.value,
   }));
 
+  // While a retry is in flight, swap the row back to its pending visual
+  // (pulsing dot + dots in the latency block) so the user sees progress.
+  const effectiveHasData = hasData && !isRetrying;
+  const effectiveIsRunning = isRunning || Boolean(isRetrying);
+
   return (
     <Animated.View style={[styles.row, compact && styles.rowCompact, entranceStyle]}>
-      <StatusDot slot={slot} hasData={hasData} isRunning={isRunning} />
+      <StatusDot
+        slot={slot}
+        hasData={effectiveHasData}
+        isRunning={effectiveIsRunning}
+      />
       <View style={styles.rowText}>
         <Text style={[styles.api, compact && styles.apiCompact]}>{slot.api}</Text>
         {!compact && <Text style={styles.purpose}>{slot.purpose}</Text>}
@@ -185,8 +213,10 @@ function TickerRow({
       <LatencyCounter
         call={slot.call}
         revealDelayMs={slot.revealDelayMs}
-        hasData={hasData}
-        isRunning={isRunning}
+        hasData={effectiveHasData}
+        isRunning={effectiveIsRunning}
+        onRetry={onRetry}
+        compact={compact}
       />
     </Animated.View>
   );
@@ -268,11 +298,15 @@ function LatencyCounter({
   revealDelayMs,
   hasData,
   isRunning,
+  onRetry,
+  compact,
 }: {
   call: OrthogonalCallLog | null;
   revealDelayMs: number;
   hasData: boolean;
   isRunning: boolean;
+  onRetry?: (sourceId: string) => void;
+  compact?: boolean;
 }) {
   const [display, setDisplay] = useState<number | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -316,8 +350,19 @@ function LatencyCounter({
 
   const label = STATUS_LABEL[call.status];
   const labelColor = STATUS_COLOR[call.status];
+  const canRetry =
+    call.status === 'error' && onRetry && call.source_id && !compact;
   return (
     <View style={styles.latencyBlock}>
+      {canRetry ? (
+        <Pressable
+          onPress={() => onRetry!(call.source_id!)}
+          hitSlop={8}
+          style={({ pressed }) => [styles.retryPill, pressed && styles.retryPillPressed]}
+        >
+          <Text style={styles.retryPillText}>retry</Text>
+        </Pressable>
+      ) : null}
       <Text style={[styles.latencyLabel, { color: labelColor }]}>{label}</Text>
       <Text style={styles.latency}>
         {display ?? 0}
@@ -432,23 +477,34 @@ export function OrthogonalTicker({
   calls,
   isRunning,
   compact = false,
+  live = false,
+  onRetry,
+  retryingSources,
 }: OrthogonalTickerProps) {
-  const slots = useMemo(() => buildSlots(calls), [calls]);
+  const slots = useMemo(() => buildSlots(calls, live), [calls, live]);
   const hasAnyData = calls.length > 0;
 
   return (
     <View style={[styles.container, compact && styles.containerCompact]}>
       {!compact && <TickerSummary calls={calls} isRunning={isRunning} />}
       <View style={compact ? styles.listCompact : styles.list}>
-        {slots.map((slot) => (
-          <TickerRow
-            key={slot.key}
-            slot={slot}
-            hasData={hasAnyData && slot.call !== null}
-            isRunning={isRunning}
-            compact={compact}
-          />
-        ))}
+        {slots.map((slot) => {
+          const sourceId = slot.call?.source_id;
+          const isRetrying = Boolean(
+            sourceId && retryingSources && retryingSources.has(sourceId)
+          );
+          return (
+            <TickerRow
+              key={slot.key}
+              slot={slot}
+              hasData={hasAnyData && slot.call !== null}
+              isRunning={isRunning}
+              compact={compact}
+              onRetry={onRetry}
+              isRetrying={isRetrying}
+            />
+          );
+        })}
       </View>
     </View>
   );
@@ -598,5 +654,24 @@ const styles = StyleSheet.create({
     fontFamily: mono,
     fontSize: fontSizes.sm,
     letterSpacing: 2,
+  },
+  retryPill: {
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.error,
+    backgroundColor: 'transparent',
+  },
+  retryPillPressed: {
+    opacity: 0.7,
+  },
+  retryPillText: {
+    color: colors.error,
+    fontFamily: mono,
+    fontSize: 10,
+    letterSpacing: 0.8,
+    textTransform: 'lowercase',
+    fontWeight: '600',
   },
 });

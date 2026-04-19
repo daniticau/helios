@@ -6,7 +6,7 @@
 // buttons below route to /widget-preview and /hourly-plan through optional
 // callback props so this screen stays portable across navigators.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -17,10 +17,13 @@ import {
   View,
 } from 'react-native';
 
+import { useProfileStore } from '@/shared/store';
+
 import { ActionHeroCard } from '../components/ActionHeroCard';
 import { BatteryGauge } from '../components/BatteryGauge';
 import { ForecastChart } from '../components/ForecastChart';
 import { PeakWindowBanner } from '../components/PeakWindowBanner';
+import { RateCompare } from '../components/RateCompare';
 import { COLORS, DEMO_PROFILE_EXISTING_OWNER } from '../constants';
 import { useLiveRecommendation } from '../services/liveSync';
 import { HourlyPlan } from './HourlyPlan';
@@ -30,9 +33,24 @@ import { WidgetPreview } from './WidgetPreview';
 type Route = 'dashboard' | 'widget' | 'hourly';
 
 export function LiveDashboard() {
-  const [profile, setProfile] = useState(DEMO_PROFILE_EXISTING_OWNER);
+  const storedProfile = useProfileStore((s) => s.profile);
+  const hydrated = useProfileStore((s) => s.hydrated);
+  const setProfile = useProfileStore((s) => s.setProfile);
+  const profile = storedProfile ?? DEMO_PROFILE_EXISTING_OWNER;
+
+  // First-run: seed the persisted store with the demo existing-owner profile
+  // so the next cold start keeps us on a dashboard that matches the demo
+  // pitch. Only fires once hydration completes to avoid clobbering saved
+  // edits mid-rehydrate.
+  useEffect(() => {
+    if (hydrated && !storedProfile) {
+      setProfile(DEMO_PROFILE_EXISTING_OWNER);
+    }
+  }, [hydrated, storedProfile, setProfile]);
+
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [route, setRoute] = useState<Route>('dashboard');
+  const [sourcesOpen, setSourcesOpen] = useState(false);
 
   const { query, state } = useLiveRecommendation(profile);
 
@@ -94,6 +112,12 @@ export function LiveDashboard() {
 
             <ActionHeroCard rec={rec} />
 
+            <RateCompare
+              retailRate={rec.retail_rate_now}
+              exportRate={rec.export_rate_now}
+              action={rec.action}
+            />
+
             <BatteryGauge
               state={state}
               action={rec.action}
@@ -117,24 +141,35 @@ export function LiveDashboard() {
               </Pressable>
             </View>
 
-            <View style={styles.callsCard}>
-              <Text style={styles.callsHeader}>live data sources</Text>
-              {rec.orthogonal_calls_made.map((c, i) => {
-                const dotColor =
-                  c.status === 'success'
-                    ? COLORS.green
-                    : c.status === 'cached'
-                      ? COLORS.blue
-                      : COLORS.red;
-                return (
-                  <View key={i} style={styles.callRow}>
-                    <View style={[styles.callDot, { backgroundColor: dotColor }]} />
-                    <Text style={styles.callName}>{c.api}</Text>
-                    <Text style={styles.callLatency}>{c.latency_ms}ms</Text>
-                  </View>
-                );
-              })}
-            </View>
+            <Pressable
+              style={styles.sourcesToggle}
+              onPress={() => setSourcesOpen((v) => !v)}
+            >
+              <Text style={styles.callsHeader}>
+                {sourcesOpen ? 'hide data sources' : 'show data sources'}
+              </Text>
+              <Text style={styles.sourcesChevron}>{sourcesOpen ? '▾' : '▸'}</Text>
+            </Pressable>
+
+            {sourcesOpen && (
+              <View style={styles.callsCard}>
+                {rec.orthogonal_calls_made.map((c, i) => {
+                  const dotColor =
+                    c.status === 'success'
+                      ? COLORS.green
+                      : c.status === 'cached'
+                        ? COLORS.blue
+                        : COLORS.red;
+                  return (
+                    <View key={i} style={styles.callRow}>
+                      <View style={[styles.callDot, { backgroundColor: dotColor }]} />
+                      <Text style={styles.callName}>{c.api}</Text>
+                      <Text style={styles.callLatency}>{c.latency_ms}ms</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
 
             <Text style={styles.footerHint}>
               Auto-refreshes every 60s. Pull to refresh.
@@ -147,7 +182,6 @@ export function LiveDashboard() {
         visible={settingsOpen}
         profile={profile}
         onClose={() => setSettingsOpen(false)}
-        onSave={setProfile}
       />
     </View>
   );
@@ -155,7 +189,7 @@ export function LiveDashboard() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  scroll: { padding: 16, gap: 16, paddingBottom: 60, paddingTop: 50 },
+  scroll: { padding: 16, gap: 20, paddingBottom: 60, paddingTop: 50 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 4 },
   subtitle: {
     color: COLORS.accent,
@@ -225,7 +259,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
-    marginBottom: 10,
+  },
+  sourcesToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
+  },
+  sourcesChevron: {
+    color: COLORS.accent,
+    fontSize: 14,
   },
   callRow: {
     flexDirection: 'row',

@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, Request
 
 from auth import User, get_optional_user
 from econ import compute_roi, recommend_system_size
-from orchestrator import gather_for_roi
+from orchestrator import collect_fallbacks_used, gather_for_roi
 from schemas import ROIRequest, ROIResult
 
 logger = logging.getLogger("helios.routes.roi")
@@ -41,4 +41,7 @@ async def post_roi(
     zenpower = request.app.state.zenpower
     external = await gather_for_roi(profile, zenpower)
 
-    return compute_roi(profile=profile, system=system, external=external)
+    result = compute_roi(profile=profile, system=system, external=external)
+    return result.model_copy(
+        update={"fallbacks_used": collect_fallbacks_used(external)}
+    )

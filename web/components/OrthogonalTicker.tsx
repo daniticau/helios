@@ -42,6 +42,8 @@ interface OrthogonalTickerProps {
   calls: readonly OrthogonalCallLog[];
   isRunning: boolean;
   compact?: boolean;
+  /** Live mode: rows reveal as they arrive (no fake stagger). */
+  live?: boolean;
 }
 
 type SlotState = {
@@ -52,53 +54,60 @@ type SlotState = {
   revealDelayMs: number;
 };
 
-function buildSlots(calls: readonly OrthogonalCallLog[]): SlotState[] {
-  const byApi = new Map<string, OrthogonalCallLog>();
-  for (const c of calls) byApi.set(c.api, c);
-
-  const baseSlots: Array<Omit<SlotState, 'revealDelayMs'>> = EXPECTED_SLOTS.map(
-    ({ api, purpose }) => ({
+function buildSlots(calls: readonly OrthogonalCallLog[], live: boolean): SlotState[] {
+  // No calls yet → render EXPECTED_SLOTS as placeholder rows. Safe keys
+  // because every EXPECTED_SLOTS.api is distinct.
+  if (calls.length === 0) {
+    return EXPECTED_SLOTS.map(({ api, purpose }) => ({
       key: api,
       api,
       purpose,
-      call: byApi.get(api) ?? null,
-    })
-  );
-  for (const c of calls) {
-    if (!EXPECTED_SLOTS.some((s) => s.api === c.api)) {
-      baseSlots.push({ key: c.api, api: c.api, purpose: c.purpose, call: c });
-    }
+      call: null,
+      revealDelayMs: 0,
+    }));
   }
 
-  const resolved = baseSlots
-    .filter((s) => s.call !== null)
-    .map((s) => s.call!)
-    .sort((a, b) => a.latency_ms - b.latency_ms);
+  // Backend sends `api` as a provider name ("Linkup", "Precip AI", …),
+  // with multiple calls sharing the same provider. Render exactly the
+  // calls array in wire order and key by index to avoid collisions.
+  const baseSlots = calls.map((c, i) => ({
+    key: `${i}-${c.api}`,
+    api: c.api,
+    purpose: c.purpose,
+    call: c,
+  }));
 
-  if (resolved.length === 0) {
+  // Live mode: each row's entrance fires the moment its call event lands.
+  // No precomputed stagger — the wire timing IS the timing.
+  if (live) {
     return baseSlots.map((s) => ({ ...s, revealDelayMs: 0 }));
   }
 
-  const maxLatency = resolved[resolved.length - 1]!.latency_ms;
-  const minLatency = resolved[0]!.latency_ms;
+  const sortedIndices = baseSlots
+    .map((_, i) => i)
+    .sort((a, b) => baseSlots[a]!.call.latency_ms - baseSlots[b]!.call.latency_ms);
+
+  const maxLatency = baseSlots[sortedIndices[sortedIndices.length - 1]!]!.call.latency_ms;
+  const minLatency = baseSlots[sortedIndices[0]!]!.call.latency_ms;
   const spanLatency = Math.max(1, maxLatency - minLatency);
   const totalReveal = Math.min(
     TOTAL_REVEAL_MS_MAX,
     Math.max(TOTAL_REVEAL_MS_MIN, maxLatency * 0.9)
   );
 
-  const delayByApi = new Map<string, number>();
-  resolved.forEach((call, idx) => {
+  const delayByIndex = new Map<number, number>();
+  sortedIndices.forEach((origIdx, rank) => {
+    const call = baseSlots[origIdx]!.call;
     const latencyFrac = (call.latency_ms - minLatency) / spanLatency;
-    const rankFrac = resolved.length > 1 ? idx / (resolved.length - 1) : 0;
+    const rankFrac = sortedIndices.length > 1 ? rank / (sortedIndices.length - 1) : 0;
     const blended = 0.65 * latencyFrac + 0.35 * rankFrac;
-    const delay = Math.max(idx * ROW_STAGGER_MIN_MS, blended * totalReveal);
-    delayByApi.set(call.api, delay);
+    const delay = Math.max(rank * ROW_STAGGER_MIN_MS, blended * totalReveal);
+    delayByIndex.set(origIdx, delay);
   });
 
-  return baseSlots.map((s) => ({
+  return baseSlots.map((s, i) => ({
     ...s,
-    revealDelayMs: s.call ? delayByApi.get(s.call.api) ?? 0 : totalReveal + 200,
+    revealDelayMs: delayByIndex.get(i) ?? 0,
   }));
 }
 
@@ -320,7 +329,7 @@ function TickerHeader({
       style={{ fontFamily: 'var(--font-mono)' }}
     >
       <div className="flex items-center gap-2">
-        <span className="text-[color:var(--color-accent)]">orthogonal &gt;</span>
+        <span className="text-[color:var(--color-accent)]">parallel &gt;</span>
         <span>{isRunning ? 'fan-out in flight' : 'fan-out complete'}</span>
         {isRunning && (
           <span className="caret-blink text-[color:var(--color-accent)]">▌</span>
@@ -353,8 +362,9 @@ export function OrthogonalTicker({
   calls,
   isRunning,
   compact = false,
+  live = false,
 }: OrthogonalTickerProps) {
-  const slots = useMemo(() => buildSlots(calls), [calls]);
+  const slots = useMemo(() => buildSlots(calls, live), [calls, live]);
   const hasAnyData = calls.length > 0;
 
   if (compact) {
@@ -362,7 +372,7 @@ export function OrthogonalTicker({
       <div className="space-y-0">
         {slots.map((slot, i) => (
           <TickerRow
-            key={slot.key}
+            key={`${i}-${slot.key}`}
             slot={slot}
             index={i}
             hasData={hasAnyData && slot.call !== null}
@@ -380,7 +390,7 @@ export function OrthogonalTicker({
       <div className="px-2 py-1">
         {slots.map((slot, i) => (
           <TickerRow
-            key={slot.key}
+            key={`${i}-${slot.key}`}
             slot={slot}
             index={i}
             hasData={hasAnyData && slot.call !== null}

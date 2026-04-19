@@ -7,7 +7,6 @@ test.describe('login page', () => {
   test('renders sign-in header and the "not configured" placeholder', async ({ page }) => {
     await page.goto('/login');
 
-    // Top copy — "access · credentials" eyebrow + h1 "Save your estimates."
     await expect(page.getByRole('heading', { level: 1, name: /save your estimates/i })).toBeVisible();
     await expect(page.getByText(/access.*credentials/i)).toBeVisible();
 
@@ -15,35 +14,36 @@ test.describe('login page', () => {
     await expect(page.getByText(/placeholder mode/i)).toBeVisible();
   });
 
-  test('GitHub button is clickable and surfaces inline error in placeholder mode', async ({
-    page,
-  }) => {
+  test('mode toggle switches between sign in and create account', async ({ page }) => {
     await page.goto('/login');
-    // The button label reads "continue · github" in the terminal aesthetic.
-    const githubBtn = page.getByRole('button', { name: /continue.*github/i });
-    await expect(githubBtn).toBeVisible();
-    await githubBtn.click();
-    // Clicking without configured Supabase should show an inline error.
-    await expect(page.getByText(/auth not configured/i)).toBeVisible();
+
+    const signInTab = page.getByRole('button', { name: /^sign in$/i });
+    const signUpTab = page.getByRole('button', { name: /^create account$/i });
+
+    await expect(signInTab).toHaveAttribute('aria-pressed', 'true');
+    await expect(signUpTab).toHaveAttribute('aria-pressed', 'false');
+
+    await signUpTab.click();
+    await expect(signUpTab).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('form button[type="submit"]')).toContainText(/create account/i);
   });
 
-  test('magic link form accepts an email and "continue without signing in" routes to /install', async ({
-    page,
-  }) => {
+  test('submitting the form in placeholder mode surfaces an inline error', async ({ page }) => {
     await page.goto('/login');
-    // Wait for hydration before interacting — in Next 15 dev mode a fresh
-    // route navigation occasionally drops Playwright's first input event on
-    // the floor, leaving a controlled React input empty after .fill().
     await page.waitForLoadState('networkidle');
 
     const email = page.getByLabel(/^email$/i);
+    const password = page.getByLabel(/^password$/i);
     await email.waitFor({ state: 'visible' });
-    // pressSequentially fires per-keystroke events which React's synthetic
-    // event system picks up reliably, unlike the single bulk assign that
-    // .fill() performs.
+
     await email.click();
     await email.pressSequentially('daniticau@example.com', { delay: 10 });
+    await password.click();
+    await password.pressSequentially('hunter2hunter2', { delay: 10 });
     await expect(email).toHaveValue('daniticau@example.com');
+
+    await page.locator('form button[type="submit"]').click();
+    await expect(page.getByText(/auth not configured/i)).toBeVisible();
 
     const continueLink = page.getByRole('link', { name: /continue without signing in/i });
     await expect(continueLink).toHaveAttribute('href', '/install');

@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -18,7 +18,8 @@ import { AgentRunning } from '@/modeA/screens/AgentRunning';
 import { OnboardAddress } from '@/modeA/screens/OnboardAddress';
 import { OnboardUtility } from '@/modeA/screens/OnboardUtility';
 import { ROIResult } from '@/modeA/screens/ROIResult';
-import { colors, fontSizes, mono, spacing } from '@/modeA/theme';
+import { colors } from '@/modeA/theme';
+import { AnimatedTabBar } from '@/shared/components/AnimatedTabBar';
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -70,30 +71,6 @@ function ModeAStack() {
   );
 }
 
-function TabIconDot({ focused }: { focused: boolean }) {
-  return (
-    <View
-      style={[
-        styles.tabDot,
-        { backgroundColor: focused ? colors.accent : colors.textDim },
-      ]}
-    />
-  );
-}
-
-function TabLabel({ focused, label }: { focused: boolean; label: string }) {
-  return (
-    <Text
-      style={[
-        styles.tabLabel,
-        { color: focused ? colors.accent : colors.textMuted },
-      ]}
-    >
-      {label}
-    </Text>
-  );
-}
-
 // Tiny "Account" tab. Hosts login/signed-in state. Anonymous demo flow
 // continues to work — this is purely additive.
 function AccountTab() {
@@ -108,50 +85,12 @@ export default function App() {
           <AuthProvider>
             <NavigationContainer theme={navTheme}>
               <Tabs.Navigator
-                screenOptions={{
-                  headerShown: false,
-                  tabBarStyle: {
-                    backgroundColor: colors.bg,
-                    borderTopColor: colors.border,
-                    borderTopWidth: StyleSheet.hairlineWidth,
-                    height: 72,
-                    paddingTop: 8,
-                  },
-                  tabBarLabelStyle: {
-                    marginTop: 2,
-                  },
-                }}
+                screenOptions={{ headerShown: false }}
+                tabBar={(props) => <AnimatedTabBar {...props} />}
               >
-                <Tabs.Screen
-                  name="Install"
-                  component={ModeAStack}
-                  options={{
-                    tabBarIcon: ({ focused }) => <TabIconDot focused={focused} />,
-                    tabBarLabel: ({ focused }) => (
-                      <TabLabel focused={focused} label="install" />
-                    ),
-                  }}
-                />
-                <Tabs.Screen
-                  name="Live"
-                  component={LiveDashboard}
-                  options={{
-                    tabBarIcon: ({ focused }) => <TabIconDot focused={focused} />,
-                    tabBarLabel: ({ focused }) => (
-                      <TabLabel focused={focused} label="live" />
-                    ),
-                  }}
-                />
-                <Tabs.Screen
-                  name="Account"
-                  component={AccountTab}
-                  options={{
-                    tabBarIcon: ({ focused }) => <TabIconDot focused={focused} />,
-                    tabBarLabel: ({ focused }) => (
-                      <TabLabel focused={focused} label="account" />
-                    ),
-                  }}
-                />
+                <Tabs.Screen name="Install" component={ModeAStack} />
+                <Tabs.Screen name="Live" component={LiveDashboard} />
+                <Tabs.Screen name="Account" component={AccountTab} />
               </Tabs.Navigator>
             </NavigationContainer>
             <StatusBar style="light" />
@@ -164,16 +103,4 @@ export default function App() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  tabDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  tabLabel: {
-    fontSize: fontSizes.xs,
-    fontFamily: mono,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginBottom: spacing.xs,
-  },
 });

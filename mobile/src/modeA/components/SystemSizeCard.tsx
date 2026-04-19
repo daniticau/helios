@@ -7,9 +7,11 @@ import { colors, fontSizes, mono, radius, spacing } from '../theme';
 
 interface SystemSizeCardProps {
   system: ProposedSystem;
+  /** Optional tariff summary rendered as a secondary row under the size split. */
+  tariffSummary?: string;
 }
 
-export function SystemSizeCard({ system }: SystemSizeCardProps) {
+export function SystemSizeCard({ system, tariffSummary }: SystemSizeCardProps) {
   return (
     <View style={styles.card}>
       <Text style={styles.eyebrow}>recommended system</Text>
@@ -26,6 +28,12 @@ export function SystemSizeCard({ system }: SystemSizeCardProps) {
           <Text style={styles.unit}>kWh battery</Text>
         </View>
       </View>
+      {tariffSummary ? (
+        <View style={styles.tariffRow}>
+          <Text style={styles.tariffLabel}>tariff</Text>
+          <Text style={styles.tariffText}>{tariffSummary}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -76,5 +84,27 @@ const styles = StyleSheet.create({
     color: colors.border,
     fontSize: fontSizes.lg,
     fontWeight: '400',
+  },
+  tariffRow: {
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: spacing.sm,
+  },
+  tariffLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    letterSpacing: 1,
+    fontFamily: mono,
+    textTransform: 'uppercase',
+  },
+  tariffText: {
+    flex: 1,
+    color: colors.text,
+    fontSize: fontSizes.sm,
+    fontFamily: mono,
   },
 });

@@ -25,7 +25,7 @@ import type { ROIResult } from '@/shared/types';
 
 import { OrthogonalTicker } from '../components/OrthogonalTicker';
 import { PrimaryButton } from '../components/PrimaryButton';
-import { useROI } from '../hooks/useROI';
+import { useROIStream } from '../hooks/useROI';
 import type { ModeAScreenProps } from '../navigation';
 import { colors, fontSizes, mono, radius, spacing } from '../theme';
 
@@ -58,37 +58,37 @@ function useElapsedSeconds(start: number | null): string {
 
 export function AgentRunning({ navigation }: ModeAScreenProps<'AgentRunning'>) {
   const profile = useProfileStore((s) => s.profile);
-  const mut = useROI();
+  const { start, calls, result, status, error, retrySource, retryingSources } =
+    useROIStream();
   const startedAt = useRef<number | null>(null);
   const navigatedRef = useRef(false);
 
   useEffect(() => {
-    if (!profile || mut.isPending || mut.isSuccess) return;
+    if (!profile || status !== 'idle') return;
     startedAt.current = Date.now();
-    mut.mutate({ profile });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile]);
+    start({ profile });
+  }, [profile, status, start]);
 
   useEffect(() => {
-    if (mut.isSuccess && mut.data && !navigatedRef.current) {
+    if (status === 'success' && result && !navigatedRef.current) {
       navigatedRef.current = true;
       // Tiny settle delay so the user sees all rows land before nav.
       const t = setTimeout(() => {
-        const result: ROIResult = mut.data;
-        navigation.replace('ROIResult', { result });
+        const r: ROIResult = result;
+        navigation.replace('ROIResult', { result: r });
       }, 1100);
       return () => clearTimeout(t);
     }
     return;
-  }, [mut.isSuccess, mut.data, navigation]);
+  }, [status, result, navigation]);
 
-  const calls = mut.data?.orthogonal_calls_made ?? [];
+  const isStreaming = status === 'streaming';
   const elapsed = useElapsedSeconds(startedAt.current);
 
   const retry = () => {
     navigatedRef.current = false;
     startedAt.current = Date.now();
-    if (profile) mut.mutate({ profile });
+    if (profile) start({ profile });
   };
 
   return (
@@ -106,18 +106,24 @@ export function AgentRunning({ navigation }: ModeAScreenProps<'AgentRunning'>) {
 
       <View style={styles.body}>
         <Animated.View entering={FadeInUp.duration(480)}>
-          <SubtitleCycler running={mut.isPending} finalLine="fan-out complete, settling" />
+          <SubtitleCycler running={isStreaming} finalLine="fan-out complete, settling" />
         </Animated.View>
 
         <Animated.View entering={FadeIn.delay(120).duration(520)} style={styles.tickerHolder}>
-          <OrthogonalTicker calls={calls} isRunning={mut.isPending} />
+          <OrthogonalTicker
+            calls={calls}
+            isRunning={isStreaming}
+            live
+            onRetry={retrySource}
+            retryingSources={retryingSources}
+          />
         </Animated.View>
 
-        {mut.isError && (
+        {status === 'error' && (
           <Animated.View entering={FadeIn.duration(300)} style={styles.errorBlock}>
             <Text style={styles.errorTitle}>agent stalled</Text>
             <Text style={styles.errorBody}>
-              {String(mut.error?.message ?? 'unknown error')}
+              {String(error ?? 'unknown error')}
             </Text>
             <PrimaryButton label="retry" onPress={retry} variant="secondary" />
           </Animated.View>

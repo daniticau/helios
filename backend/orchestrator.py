@@ -126,17 +126,42 @@ def _fatal_call_log(key: str, error: Exception) -> OrthogonalCallLog:
     )
 
 
-async def _gather_sources(sources: list[SourceSpec]) -> ExternalInputs:
-    results = await asyncio.gather(*(task for _, task in sources), return_exceptions=True)
+async def _gather_sources(
+    sources: list[SourceSpec],
+    on_event: Callable[[OrthogonalCallLog], None] | None = None,
+) -> ExternalInputs:
+    """Run all sources in parallel; optionally fire `on_event(log)` per call.
+
+    The callback fires the instant each source resolves (success or
+    error) so the SSE streaming endpoint can push it to clients live,
+    rather than waiting for the slowest call to finish.
+    """
+
+    async def _wrap(
+        key: str, task: Awaitable[SourceResult]
+    ) -> tuple[str, dict[str, Any] | None, OrthogonalCallLog]:
+        try:
+            payload, log = await task
+        except Exception as e:
+            payload = None
+            log = _fatal_call_log(key, e)
+        # Stamp the stable id so the mobile ticker can dedupe + target
+        # retries without depending on the (human-readable) api label.
+        log = log.model_copy(update={"source_id": key})
+        if on_event is not None:
+            try:
+                on_event(log)
+            except Exception:
+                pass
+        return key, payload, log
+
+    wrapped = await asyncio.gather(*(_wrap(k, t) for k, t in sources))
 
     payloads: dict[str, Any] = {}
     call_logs: list[OrthogonalCallLog] = []
-    for (key, _), result in zip(sources, results, strict=True):
-        if isinstance(result, Exception):
-            call_logs.append(_fatal_call_log(key, result))
-            continue
-        payload, log = result
-        payloads[key] = payload
+    for key, payload, log in wrapped:
+        if payload is not None:
+            payloads[key] = payload
         call_logs.append(log)
 
     payloads["calls"] = call_logs
@@ -350,7 +375,11 @@ async def fetch_carbon_price(state: str) -> tuple[dict, OrthogonalCallLog]:
         )
         value = data.get("usd_per_ton_co2")
         if not isinstance(value, (int, float)) or value <= 0:
-            return {"usd_per_ton_co2": 185.0, "source_note": "EPA 2023 default"}
+            return {
+                "usd_per_ton_co2": 185.0,
+                "source_note": "EPA 2023 default",
+                "fell_back": True,
+            }
         return {
             "usd_per_ton_co2": float(value),
             "source_note": data.get("source_note") or "Linkup",
@@ -420,17 +449,21 @@ async def fetch_financing(state: str) -> tuple[dict, OrthogonalCallLog]:
 
         low_n = _norm(apr_low)
         high_n = _norm(apr_high)
+        fell_back = False
         if not _sane(low_n):
             low_n = 0.069
+            fell_back = True
         if not _sane(high_n):
             high_n = 0.099
+            fell_back = True
         if high_n < low_n:
             low_n, high_n = high_n, low_n
         return {
             "apr_low": round(low_n, 4),
             "apr_high": round(high_n, 4),
             "lenders": data.get("lenders") or ["GoodLeap", "Sunlight Financial"],
-            "source": "linkup",
+            "source": "linkup:fallback" if fell_back else "linkup",
+            "fell_back": fell_back,
         }
 
     return await _timed_call(
@@ -488,6 +521,7 @@ async def fetch_installer_pricing(zip_code: str) -> tuple[dict, OrthogonalCallLo
                 "usd_per_watt_high": 4.5,
                 "zip": zip_code,
                 "source": "linkup:fallback",
+                "fell_back": True,
             }
         lo, hi = float(low), float(high)
         if hi < lo:
@@ -638,6 +672,7 @@ async def fetch_property_value(
                 "address": address,
                 "estimated_value_usd": 850_000.0,  # SoCal median fallback
                 "source": "linkup:fallback",
+                "fell_back": True,
             }
         return {
             "address": address,
@@ -768,33 +803,82 @@ async def fetch_zenpower_summary(
 
 
 async def gather_for_roi(
-    profile: UserProfile, zenpower: ZenPowerIndex | None
+    profile: UserProfile,
+    zenpower: ZenPowerIndex | None,
+    on_event: Callable[[OrthogonalCallLog], None] | None = None,
 ) -> ExternalInputs:
     """Fire every ROI-relevant source in parallel; return normalized dict.
 
     Order matches the mobile ticker animation. Any single failure is
-    captured as an ``error`` log rather than raising.
+    captured as an ``error`` log rather than raising. ``on_event``, when
+    supplied, is invoked once per source the instant it resolves —
+    used by the SSE streaming endpoint to push live ticker updates.
     """
-    zip_code = _extract_zip(profile.address)
-    state = _state_from_profile(profile)
-
     return await _gather_sources(
-        [
-            ("tariff", fetch_tariff(profile)),
-            ("weather", fetch_weather(profile.lat, profile.lng)),
-            ("installer_pricing", fetch_installer_pricing(zip_code)),
-            ("financing", fetch_financing(state)),
-            ("news", fetch_news(state)),
-            ("property_value", fetch_property_value(profile.address, zip_code)),
-            ("demographics", fetch_demographics(zip_code, profile.utility)),
-            ("reviews", fetch_installer_reviews(zip_code)),
-            ("carbon_price", fetch_carbon_price(state)),
-            ("zenpower", fetch_zenpower_summary(zip_code, zenpower)),
-        ]
+        _build_roi_source_specs(profile, zenpower),
+        on_event=on_event,
     )
 
 
-async def gather_for_live(profile: UserProfile) -> ExternalInputs:
+def _build_roi_source_specs(
+    profile: UserProfile,
+    zenpower: ZenPowerIndex | None,
+) -> list[SourceSpec]:
+    """Canonical source list for a full ROI fan-out.
+
+    Extracted so ``gather_for_roi`` and ``retry_one_source`` stay in
+    sync — any adapter we add appears in both paths automatically.
+    """
+    zip_code = _extract_zip(profile.address)
+    state = _state_from_profile(profile)
+    return [
+        ("tariff", fetch_tariff(profile)),
+        ("weather", fetch_weather(profile.lat, profile.lng)),
+        ("installer_pricing", fetch_installer_pricing(zip_code)),
+        ("financing", fetch_financing(state)),
+        ("news", fetch_news(state)),
+        ("property_value", fetch_property_value(profile.address, zip_code)),
+        ("demographics", fetch_demographics(zip_code, profile.utility)),
+        ("reviews", fetch_installer_reviews(zip_code)),
+        ("carbon_price", fetch_carbon_price(state)),
+        ("zenpower", fetch_zenpower_summary(zip_code, zenpower)),
+    ]
+
+
+async def retry_one_source(
+    source_id: str,
+    profile: UserProfile,
+    zenpower: ZenPowerIndex | None,
+    on_event: Callable[[OrthogonalCallLog], None] | None = None,
+) -> OrthogonalCallLog:
+    """Re-fire a single ROI source by id. Returns the resulting log.
+
+    Used by ``POST /api/roi/retry/{job_id}`` to refresh a single ticker
+    row without re-running the full fan-out. Payload is discarded — the
+    econ result has already been computed; only the log matters for the
+    ticker's visual state.
+    """
+    specs = _build_roi_source_specs(profile, zenpower)
+    for key, awaitable in specs:
+        if key == source_id:
+            try:
+                _payload, log = await awaitable
+            except Exception as e:
+                log = _fatal_call_log(key, e)
+            log = log.model_copy(update={"source_id": key})
+            if on_event is not None:
+                try:
+                    on_event(log)
+                except Exception:
+                    pass
+            return log
+    raise ValueError(f"Unknown source_id: {source_id}")
+
+
+async def gather_for_live(
+    profile: UserProfile,
+    on_event: Callable[[OrthogonalCallLog], None] | None = None,
+) -> ExternalInputs:
     """Lightweight fan-out for Mode B: weather + CAISO LMP + tariff.
 
     ``external["caiso_lmp_24h"]`` is flattened into a plain list so the
@@ -807,7 +891,8 @@ async def gather_for_live(profile: UserProfile) -> ExternalInputs:
             ("weather", fetch_weather(profile.lat, profile.lng)),
             ("caiso_lmp", fetch_caiso_lmp()),
             ("news", fetch_news(_state_from_profile(profile))),
-        ]
+        ],
+        on_event=on_event,
     )
 
     # Promote the LMP series to a flat list so downstream consumers don't
@@ -820,8 +905,44 @@ async def gather_for_live(profile: UserProfile) -> ExternalInputs:
     return out
 
 
+# Sources where a "used fallback default" outcome maps to a specific
+# number on the result card. Used by ``collect_fallbacks_used`` so the web
+# UI can flag those numbers with a `via fallback` chip.
+FALLBACK_RELEVANT_SOURCES: frozenset[str] = frozenset(
+    {
+        "installer_pricing",
+        "financing",
+        "property_value",
+        "carbon_price",
+    }
+)
+
+
+def collect_fallbacks_used(external: ExternalInputs) -> list[str]:
+    """Which fallback-relevant sources used a documented default instead
+    of live Orthogonal data.
+
+    A source counts as "fell back" if either its fetcher returned a
+    payload with ``fell_back=True`` (the in-fetcher guard rails fired) or
+    the payload is missing entirely (the call raised and ``_gather_sources``
+    captured it as an error log).
+    """
+    used: list[str] = []
+    for key in FALLBACK_RELEVANT_SOURCES:
+        payload = external.get(key)  # type: ignore[call-overload]
+        if payload is None:
+            used.append(key)
+            continue
+        if isinstance(payload, dict) and payload.get("fell_back"):
+            used.append(key)
+    return sorted(used)
+
+
 __all__ = [
     "ExternalInputs",
+    "FALLBACK_RELEVANT_SOURCES",
+    "collect_fallbacks_used",
     "gather_for_live",
     "gather_for_roi",
+    "retry_one_source",
 ]

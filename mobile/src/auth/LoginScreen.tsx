@@ -1,6 +1,7 @@
-// LoginScreen — email magic link + GitHub OAuth. Minimal UI, matches the
-// Mode A dark theme. Not part of the onboarding flow by design —
-// DEMO_PROFILE continues to work without ever touching this screen.
+// LoginScreen — email + password auth with a sign-in / sign-up toggle.
+// Minimal UI, matches the Mode A dark theme. Not part of the onboarding
+// flow by design — DEMO_PROFILE continues to work without ever touching
+// this screen.
 
 import { useState } from 'react';
 import {
@@ -14,8 +15,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/modeA/components/PrimaryButton';
@@ -24,82 +23,67 @@ import { colors, fontSizes, mono, radius, spacing } from '@/modeA/theme';
 import { getSupabase, isSupabaseConfigured } from './client';
 import { useAuth } from './AuthProvider';
 
-type Status = 'idle' | 'sending' | 'sent' | 'error';
-
-WebBrowser.maybeCompleteAuthSession();
+type Mode = 'signin' | 'signup';
+type Status = 'idle' | 'submitting' | 'confirm' | 'error';
 
 export function LoginScreen({ onDone }: { onDone?: () => void }) {
   const { user } = useAuth();
+  const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
 
-  const sendMagicLink = async () => {
+  const submit = async () => {
     const supabase = getSupabase();
     if (!supabase) {
       setError('Auth not configured. Set SUPABASE_* in app.json.extra.');
       setStatus('error');
       return;
     }
-    if (!email.trim()) return;
-    setStatus('sending');
+    const trimmed = email.trim();
+    if (!trimmed || !password) return;
+    if (mode === 'signup' && password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      setStatus('error');
+      return;
+    }
+
+    setStatus('submitting');
     setError(null);
     try {
-      // Deep link back into the Expo Go / standalone app after the user
-      // taps the link in their email. For Expo Go the scheme is expo-dev;
-      // for standalone it's the app slug. expo-linking picks the right one.
-      const redirectTo = Linking.createURL('auth-callback');
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: { emailRedirectTo: redirectTo },
+      if (mode === 'signin') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: trimmed,
+          password,
+        });
+        if (error) throw error;
+        setStatus('idle');
+        onDone?.();
+        return;
+      }
+      const { data, error } = await supabase.auth.signUp({
+        email: trimmed,
+        password,
       });
       if (error) throw error;
-      setStatus('sent');
+      if (data.session) {
+        setStatus('idle');
+        onDone?.();
+      } else {
+        setStatus('confirm');
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setStatus('error');
     }
   };
 
-  const signInWithGithub = async () => {
-    const supabase = getSupabase();
-    if (!supabase) {
-      setError('Auth not configured. Set SUPABASE_* in app.json.extra.');
-      setStatus('error');
-      return;
-    }
-    setStatus('sending');
+  const switchMode = (next: Mode) => {
+    if (next === mode) return;
+    setMode(next);
+    setStatus('idle');
     setError(null);
-    try {
-      const redirectTo = Linking.createURL('auth-callback');
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: { redirectTo, skipBrowserRedirect: true },
-      });
-      if (error) throw error;
-      if (!data?.url) throw new Error('no oauth url from supabase');
-      const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-      if (res.type !== 'success' || !res.url) {
-        setStatus('idle');
-        return;
-      }
-      // Supabase returns session params in the URL hash fragment after the
-      // OAuth callback; @supabase/supabase-js exposes `setSession` which
-      // takes access + refresh tokens directly.
-      const urlObj = new URL(res.url);
-      const access = urlObj.searchParams.get('access_token')
-        ?? new URLSearchParams(urlObj.hash.replace(/^#/, '')).get('access_token');
-      const refresh = urlObj.searchParams.get('refresh_token')
-        ?? new URLSearchParams(urlObj.hash.replace(/^#/, '')).get('refresh_token');
-      if (access && refresh) {
-        await supabase.auth.setSession({ access_token: access, refresh_token: refresh });
-      }
-      setStatus('idle');
-      onDone?.();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      setStatus('error');
-    }
   };
 
   if (user) {
@@ -117,6 +101,9 @@ export function LoginScreen({ onDone }: { onDone?: () => void }) {
       </SafeAreaView>
     );
   }
+
+  const submitting = status === 'submitting';
+  const submitLabel = mode === 'signin' ? 'sign in' : 'create account';
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -143,30 +130,35 @@ export function LoginScreen({ onDone }: { onDone?: () => void }) {
             </View>
           )}
 
-          <Pressable
-            onPress={signInWithGithub}
-            disabled={status === 'sending'}
-            style={({ pressed }) => [
-              styles.ghostButton,
-              pressed && { opacity: 0.85 },
-              status === 'sending' && { opacity: 0.5 },
-            ]}
-          >
-            <Text style={styles.ghostLabel}>continue with github</Text>
-          </Pressable>
-
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
+          <View style={styles.tabs}>
+            <Pressable
+              onPress={() => switchMode('signin')}
+              style={[styles.tab, mode === 'signin' && styles.tabActive]}
+            >
+              <Text
+                style={[styles.tabLabel, mode === 'signin' && styles.tabLabelActive]}
+              >
+                sign in
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => switchMode('signup')}
+              style={[styles.tab, mode === 'signup' && styles.tabActive]}
+            >
+              <Text
+                style={[styles.tabLabel, mode === 'signup' && styles.tabLabelActive]}
+              >
+                create account
+              </Text>
+            </Pressable>
           </View>
 
-          {status === 'sent' ? (
+          {status === 'confirm' ? (
             <View style={styles.sent}>
-              <Text style={styles.sentTitle}>magic link sent</Text>
+              <Text style={styles.sentTitle}>confirm your email</Text>
               <Text style={styles.sentBody}>
-                Check <Text style={styles.emailSent}>{email}</Text> for a sign-in
-                link.
+                Check <Text style={styles.emailSent}>{email}</Text> for a
+                confirmation link, then sign in.
               </Text>
             </View>
           ) : (
@@ -183,15 +175,29 @@ export function LoginScreen({ onDone }: { onDone?: () => void }) {
                 autoCapitalize="none"
                 autoCorrect={false}
               />
+              <Text style={[styles.label, { marginTop: spacing.sm }]}>password</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder={mode === 'signup' ? 'min 8 characters' : '••••••••'}
+                placeholderTextColor={colors.textDim}
+                style={styles.input}
+                secureTextEntry
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
               <PrimaryButton
-                label={status === 'sending' ? 'sending…' : 'send magic link'}
-                onPress={sendMagicLink}
-                disabled={status === 'sending' || email.trim().length === 0}
+                label={submitting ? 'working…' : submitLabel}
+                onPress={submit}
+                disabled={
+                  submitting || email.trim().length === 0 || password.length === 0
+                }
               />
             </View>
           )}
 
-          {status === 'sending' && (
+          {submitting && (
             <View style={{ alignItems: 'center', marginTop: spacing.md }}>
               <ActivityIndicator color={colors.accent} />
             </View>
@@ -264,35 +270,33 @@ const styles = StyleSheet.create({
     fontFamily: mono,
     fontSize: 12,
   },
-  ghostButton: {
+  tabs: {
+    flexDirection: 'row',
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.card,
     borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
+    padding: 4,
+    backgroundColor: colors.card,
+    gap: 4,
   },
-  ghostLabel: {
-    color: colors.text,
-    fontSize: fontSizes.base,
-    fontWeight: '600',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  dividerLine: {
+  tab: {
     flex: 1,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.border,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    borderRadius: radius.sm,
   },
-  dividerText: {
-    color: colors.textDim,
+  tabActive: {
+    backgroundColor: colors.bg,
+  },
+  tabLabel: {
+    color: colors.textMuted,
     fontFamily: mono,
-    fontSize: 11.5,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
+    fontSize: 12,
+    letterSpacing: 1,
+    textTransform: 'lowercase',
+  },
+  tabLabelActive: {
+    color: colors.accent,
   },
   formGroup: {
     gap: spacing.sm,

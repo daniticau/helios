@@ -5,6 +5,7 @@
 import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { SiteFooter } from '@/components/SiteFooter';
+import { SignInToSaveLink } from '@/components/SignInToSaveLink';
 
 const LANDING_APIS = [
   { name: 'tariff', latency: 612, purpose: 'time-of-use plan resolution', partner: 'scrapegraph' },
@@ -57,7 +58,7 @@ export default function LandingPage() {
                 Enter an address. Helios fans out{' '}
                 <span className="text-[color:var(--color-text)]">ten paid APIs</span>{' '}
                 in parallel through{' '}
-                <span className="text-[color:var(--color-accent)]">a single Orthogonal SDK</span>
+                <span className="text-[color:var(--color-accent)]">a single unified API</span>
                 : tariff, weather, permits, installer pricing, financing, news,
                 property value, demographics, reviews, carbon price. Out comes a
                 25-year net present value, payback period, and recommended system.
@@ -112,7 +113,7 @@ export default function LandingPage() {
               Ten API signups. Ten billing dashboards. Ten response shapes to
               normalize. Ten keys to rotate. We did it with{' '}
               <span className="text-[color:var(--color-text)]">one SDK integration</span>
-              {' '}and a single Orthogonal bill. Metered pay-per-use, zero key
+              {' '}and a single bill. Metered pay-per-use, zero key
               management, zero onboarding.
             </p>
           </div>
@@ -151,7 +152,7 @@ export default function LandingPage() {
             />
             <StepCard
               title="Ten APIs fan out"
-              body="One asyncio.gather call, one Orthogonal SDK. The ticker you see above is the real thing, streaming real latencies."
+              body="One asyncio.gather call, one unified SDK. The ticker you see above is the real thing, streaming real latencies."
             />
             <StepCard
               title="A number you can quote"
@@ -180,8 +181,8 @@ export default function LandingPage() {
               Run it on <span className="type-display-italic text-[color:var(--color-accent)]">your house.</span>
             </h2>
             <p className="mt-5 max-w-lg text-[15.5px] text-[color:var(--color-text-muted)]">
-              Twenty seconds, no signup. Sign in with GitHub or magic link if you
-              want to save runs across web and mobile.
+              Twenty seconds, no signup. Create an account if you want to save
+              runs across web and mobile.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -192,12 +193,19 @@ export default function LandingPage() {
                 <span className="relative z-10">start estimate →</span>
                 <span className="absolute inset-0 -translate-x-full bg-[color:var(--color-accent-warm)] transition-transform duration-500 group-hover:translate-x-0" />
               </Link>
+              <SignInToSaveLink />
+            </div>
+            <div className="mt-5">
               <Link
-                href="/login"
-                className="inline-flex items-center gap-2 rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)]/80 px-7 py-3.5 text-[13px] font-semibold text-[color:var(--color-text)] hover:border-[color:var(--color-accent)]"
+                href="/live"
+                className="inline-flex items-center gap-2 text-[12.5px] text-[color:var(--color-text-muted)] transition hover:text-[color:var(--color-accent)]"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
-                sign in to save
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-success)]"
+                  style={{ boxShadow: '0 0 5px rgba(135,214,125,0.8)' }}
+                />
+                already have solar? see the live arbitrage dashboard →
               </Link>
             </div>
           </div>
@@ -273,7 +281,7 @@ function InstrumentPanel({
             style={{ boxShadow: '0 0 6px rgba(135,214,125,0.7)' }}
           />
           <span className="text-[11px] text-[color:var(--color-accent)]">
-            orthogonal · fan-out
+            parallel · fan-out
           </span>
           <span className="caret-blink text-[color:var(--color-accent)]">▌</span>
         </div>
