@@ -36,28 +36,3 @@ export function pushWidgetUpdate(
   storage.set(KEY, JSON.stringify(payload));
   ExtensionStorage.reloadWidget('HeliosWidget');
 }
-
-/**
- * Rehearsal helper: seeds the widget with a plausible EXPORT_SOLAR payload
- * (export at $0.38/kWh vs retail $0.42, SoC 62%, peak in 2h). Used by the
- * "Push widget update" debug button in Settings so a judge can see the
- * widget render without waiting for a real `/api/live` round-trip.
- */
-export function pushDemoWidgetUpdate(): void {
-  const meta = ACTION_META.EXPORT_SOLAR;
-  const now = new Date();
-  const peakStart = new Date(now.getTime() + 2 * 60 * 60 * 1000 + 15 * 60 * 1000);
-  const payload = {
-    action: 'EXPORT_SOLAR',
-    verb: meta.verb,
-    color_hex: meta.color,
-    expected_hourly_gain_usd: 1.24,
-    retail_rate_now: 0.42,
-    export_rate_now: 0.38,
-    battery_soc_pct: 62,
-    peak_window_start_iso: peakStart.toISOString(),
-    updated_at_iso: now.toISOString(),
-  };
-  storage.set(KEY, JSON.stringify(payload));
-  ExtensionStorage.reloadWidget('HeliosWidget');
-}

@@ -152,11 +152,6 @@ function InstallFlow() {
     setStep('utility');
   };
 
-  const handleUseDemo = () => {
-    setProfile(DEMO_PROFILE);
-    setStep('utility');
-  };
-
   const handleUtilitySubmit = (patch: Partial<UserProfile>) => {
     const merged: UserProfile = { ...profile, ...patch } as UserProfile;
     setProfile(merged);
@@ -196,7 +191,6 @@ function InstallFlow() {
               <AddressStep
                 initialAddress={profile.address}
                 onContinue={handleAddressContinue}
-                onUseDemo={handleUseDemo}
               />
             </motion.section>
           )}

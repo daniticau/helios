@@ -3,16 +3,14 @@
 // Step 1: address capture. Typeahead combobox backed by Nominatim via
 // /api/geocode/autocomplete — selecting a suggestion gives us lat/lng
 // immediately, so continue doesn't need a second forward-geocode.
-// "Use current location" (browser geolocation) and "use demo address"
-// remain as escape hatches.
+// "Use current location" (browser geolocation) is the only escape hatch.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { DEMO_PROFILE, type UserProfile } from '@/lib/types';
+import { type UserProfile } from '@/lib/types';
 
 interface AddressStepProps {
   initialAddress?: string;
   onContinue: (patch: Partial<UserProfile> & { address: string; lat: number; lng: number }) => void;
-  onUseDemo: () => void;
 }
 
 interface Suggestion {
@@ -26,7 +24,7 @@ interface Suggestion {
 const DEBOUNCE_MS = 250;
 const MIN_QUERY_LEN = 3;
 
-export function AddressStep({ initialAddress, onContinue, onUseDemo }: AddressStepProps) {
+export function AddressStep({ initialAddress, onContinue }: AddressStepProps) {
   const [address, setAddress] = useState(initialAddress ?? '');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
@@ -217,16 +215,16 @@ export function AddressStep({ initialAddress, onContinue, onUseDemo }: AddressSt
       });
       if (!res.ok) {
         if (res.status === 404) {
-          setLocateError("We couldn't find that address. Pick a suggestion or use the demo.");
+          setLocateError("We couldn't find that address. Check the spelling or pick a suggestion.");
         } else {
-          setLocateError('Address lookup failed - try again or use the demo address.');
+          setLocateError('Address lookup failed — try again in a moment.');
         }
         return;
       }
       const data = (await res.json()) as { lat: number; lng: number; display_name: string };
       onContinue({ address: data.display_name || trimmed, lat: data.lat, lng: data.lng });
     } catch {
-      setLocateError('Address lookup failed - try again or use the demo address.');
+      setLocateError('Address lookup failed — try again in a moment.');
     } finally {
       setResolving(false);
     }
@@ -341,27 +339,6 @@ export function AddressStep({ initialAddress, onContinue, onUseDemo }: AddressSt
           </p>
         )}
       </div>
-
-      <button
-        type="button"
-        onClick={() => {
-          suppressNextFetchRef.current = true;
-          setAddress(DEMO_PROFILE.address);
-          setCoords({ lat: DEMO_PROFILE.lat, lng: DEMO_PROFILE.lng });
-          setShowSuggestions(false);
-          onUseDemo();
-        }}
-        className="group inline-flex items-center gap-3 border border-[color:var(--color-hairline)] bg-[color:var(--color-card)]/60 px-4 py-2.5 text-left transition hover:border-[color:var(--color-accent)]/50 hover:bg-[color:var(--color-card)]"
-        style={{ fontFamily: 'var(--font-mono)' }}
-      >
-        <span
-          className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-success)]"
-          style={{ boxShadow: '0 0 5px rgba(135,214,125,0.8)' }}
-        />
-        <span className="text-[12px] text-[color:var(--color-text-muted)] group-hover:text-[color:var(--color-text)]">
-          use the demo address (la jolla, sdge)
-        </span>
-      </button>
 
       <div className="pt-4">
         <button

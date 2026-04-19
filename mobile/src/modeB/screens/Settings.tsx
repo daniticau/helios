@@ -1,9 +1,7 @@
 // System specs modal: battery kWh, inverter max kW, utility, tariff plan.
-// Also the "Demo: fire peak notif" button for rehearsals (see notifications.ts).
 
 import { useEffect, useState } from 'react';
 import {
-  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -17,8 +15,6 @@ import { useProfileStore } from '@/shared/store';
 import type { UserProfile, UtilityCode } from '@/shared/types';
 
 import { COLORS } from '../constants';
-import { scheduleFakePeakNotif } from '../services/notifications';
-import { pushDemoWidgetUpdate } from '../services/widgetSync';
 
 interface Props {
   visible: boolean;
@@ -58,27 +54,6 @@ export function Settings({ visible, profile, onClose }: Props) {
     };
     patch(next);
     onClose();
-  }
-
-  async function fireNotif() {
-    try {
-      await scheduleFakePeakNotif();
-      Alert.alert('Notification scheduled', 'Will fire in ~10 seconds.');
-    } catch (err) {
-      Alert.alert('Could not schedule', (err as Error).message);
-    }
-  }
-
-  function pushWidget() {
-    try {
-      pushDemoWidgetUpdate();
-      Alert.alert(
-        'Widget updated',
-        'Seeded widget with a demo EXPORT_SOLAR payload. Check the home-screen widget.'
-      );
-    } catch (err) {
-      Alert.alert('Could not update widget', (err as Error).message);
-    }
   }
 
   return (
@@ -134,27 +109,6 @@ export function Settings({ visible, profile, onClose }: Props) {
           <Pressable style={styles.saveBtn} onPress={save}>
             <Text style={styles.saveBtnText}>Save</Text>
           </Pressable>
-
-          <View style={styles.divider} />
-
-          <Text style={styles.sectionLabel}>Demo tools</Text>
-          <Pressable style={styles.demoBtn} onPress={fireNotif}>
-            <Text style={styles.demoBtnText}>Fire peak notif (10s delay)</Text>
-          </Pressable>
-          <Text style={styles.hint}>
-            Schedules a local push notif simulating the 5 PM peak window opening.
-            Tap the notification to deep-link into the hourly plan.
-          </Text>
-
-          <Pressable style={styles.demoBtn} onPress={pushWidget}>
-            <Text style={styles.demoBtnText}>Push widget update (demo payload)</Text>
-          </Pressable>
-          <Text style={styles.hint}>
-            Seeds the iOS widget's shared App Group with a plausible EXPORT_SOLAR
-            payload + 62% SoC + peak in 2h. Useful when rehearsing before the
-            backend has been hit. Requires an EAS dev build with the widget
-            target installed.
-          </Text>
         </ScrollView>
       </View>
     </Modal>
@@ -230,16 +184,4 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   saveBtnText: { color: COLORS.bg, fontSize: 16, fontWeight: '700' },
-  divider: { height: 1, backgroundColor: COLORS.border, marginVertical: 16 },
-  sectionLabel: { color: COLORS.textMuted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
-  demoBtn: {
-    backgroundColor: COLORS.card,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  demoBtnText: { color: COLORS.accent, fontSize: 15, fontWeight: '600' },
-  hint: { color: COLORS.textDim, fontSize: 12, lineHeight: 18 },
 });

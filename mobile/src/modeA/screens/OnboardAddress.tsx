@@ -1,6 +1,5 @@
-// Address entry. Users type an address, tap "use my location" to auto-fill
-// from GPS (with reverse-geocoding), or tap "demo" to load the La Jolla SDGE
-// demo profile. Advances to OnboardUtility.
+// Address entry. Users type an address or tap "use my location" to
+// auto-fill from GPS (with reverse-geocoding). Advances to OnboardUtility.
 
 import { useState } from 'react';
 import {
@@ -68,19 +67,12 @@ export function OnboardAddress({ navigation }: ModeAScreenProps<'OnboardAddress'
       const msg = err instanceof Error ? err.message : String(err);
       setLocError(
         msg.startsWith('404')
-          ? "We couldn't find that address. Check it or use the demo."
-          : 'Address lookup failed - try again or use the demo address.'
+          ? "We couldn't find that address. Check the spelling and try again."
+          : 'Address lookup failed — try again in a moment.'
       );
     } finally {
       setResolving(false);
     }
-  };
-
-  const fillDemo = () => {
-    setLocError(null);
-    setAddress(DEMO_PROFILE.address);
-    setCoords({ lat: DEMO_PROFILE.lat, lng: DEMO_PROFILE.lng });
-    setProfile(DEMO_PROFILE);
   };
 
   const useMyLocation = async () => {
@@ -161,12 +153,6 @@ export function OnboardAddress({ navigation }: ModeAScreenProps<'OnboardAddress'
               leadingIcon={
                 <Feather name="crosshair" size={16} color={colors.accent} />
               }
-              style={styles.assistBtn}
-            />
-            <PrimaryButton
-              label="demo"
-              variant="ghost"
-              onPress={fillDemo}
               style={styles.assistBtn}
             />
           </View>

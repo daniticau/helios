@@ -41,13 +41,11 @@ function normalizeProfile(p: UserProfile): UserProfile {
 
 export default function LivePage() {
   const [profile, setProfile] = useState<UserProfile>(DEMO_PROFILE_EXISTING_OWNER);
-  const [profileSource, setProfileSource] = useState<'saved' | 'demo'>('demo');
 
   useEffect(() => {
     const saved = loadSavedProfile();
     if (saved) {
       setProfile(normalizeProfile(saved));
-      setProfileSource('saved');
     }
   }, []);
   const [state, setState] = useState<HouseholdState>(() =>
@@ -155,14 +153,6 @@ export default function LivePage() {
             >
               {profile.solar_kw}kW solar · {profile.battery_kwh}kWh battery ·{' '}
               {profile.utility}
-            </div>
-            <div
-              className="mt-1 text-[11px] text-[color:var(--color-text-dim)]"
-              style={{ fontFamily: 'var(--font-mono)' }}
-            >
-              {profileSource === 'saved'
-                ? 'profile: from your last /install run'
-                : 'profile: demo existing-owner · run /install to use your own'}
             </div>
           </div>
 
