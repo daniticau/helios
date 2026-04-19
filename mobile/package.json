@@ -8,7 +8,9 @@
     "ios": "expo start --ios",
     "android": "expo start --android",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dev:ip": "node scripts/sync-dev-ip.mjs",
+    "dev": "npm run dev:ip && expo start --dev-client"
   },
   "dependencies": {
     "@expo-google-fonts/fraunces": "^0.4.1",
