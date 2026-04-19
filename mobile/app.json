@@ -14,7 +14,10 @@
       "appleTeamId": "FKVA8SHP59",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Helios uses your location to estimate solar potential at your address.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
       },
       "entitlements": {
         "com.apple.security.application-groups": [
@@ -50,7 +53,7 @@
       ]
     ],
     "extra": {
-      "apiBaseUrl": "http://100.109.21.26:8000",
+      "apiBaseUrl": "http://100.112.112.240:8000",
       "supabaseUrl": "",
       "supabasePublishableKey": "",
       "eas": {
