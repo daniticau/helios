@@ -73,15 +73,6 @@ export default function LandingPage() {
                   <span className="relative z-10 text-base">→</span>
                   <span className="absolute inset-0 -translate-x-full bg-[color:var(--color-accent-warm)] transition-transform duration-500 group-hover:translate-x-0" />
                 </Link>
-                <a
-                  href="https://github.com/daniticau/helios"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[12px] text-[color:var(--color-text-muted)] hover:text-[color:var(--color-accent)]"
-                  style={{ fontFamily: 'var(--font-mono)' }}
-                >
-                  view source ↗
-                </a>
               </div>
 
               {/* meta strip */}
@@ -122,8 +113,7 @@ export default function LandingPage() {
               normalize. Ten keys to rotate. We did it with{' '}
               <span className="text-[color:var(--color-text)]">one SDK integration</span>
               {' '}and a single Orthogonal bill. Metered pay-per-use, zero key
-              management, zero onboarding. The product genuinely did not exist
-              last quarter.
+              management, zero onboarding.
             </p>
           </div>
 

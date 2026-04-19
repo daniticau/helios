@@ -70,14 +70,6 @@ export function Header() {
           >
             install
           </Link>
-          <a
-            href="https://github.com/daniticau/helios"
-            target="_blank"
-            rel="noreferrer"
-            className="hidden text-xs text-[color:var(--color-text-muted)] hover:text-[color:var(--color-text)] sm:inline"
-          >
-            source
-          </a>
 
           {loading ? (
             <span className="h-7 w-16 rounded-sm bg-[color:var(--color-card)]" />
