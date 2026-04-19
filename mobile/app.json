@@ -9,10 +9,24 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.helios.app"
+      "bundleIdentifier": "com.daniticau.helios",
+      "appleTeamId": "FKVA8SHP59",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Helios uses your location to estimate solar potential at your address.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.helios.app.shared"
+        ]
+      }
     },
     "android": {
-      "package": "com.helios.app"
+      "package": "com.daniticau.helios",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro"
@@ -20,10 +34,40 @@
     "plugins": [
       "expo-notifications",
       "expo-secure-store",
-      "expo-asset"
+      "expo-asset",
+      "@bacons/apple-targets",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Helios uses your location to estimate solar potential at your address."
+        }
+      ]
     ],
     "extra": {
-      "apiBaseUrl": "http://100.109.21.26:8000"
-    }
+      "apiBaseUrl": "http://100.109.21.26:8000",
+      "supabaseUrl": "",
+      "supabasePublishableKey": "",
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "bundleIdentifier": "com.daniticau.helios.widget",
+                  "targetName": "HeliosWidget",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.helios.app.shared"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "befdffb4-e08c-4b13-bc39-27856445d8bf"
+      }
+    },
+    "owner": "daniticau"
   }
 }

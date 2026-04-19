@@ -2,6 +2,7 @@
 // POLL_INTERVAL_MS (60s). In dev, falls back to mockLiveRecommendation when
 // the backend is unreachable so the UI can be demoed standalone.
 
+import { useEffect } from 'react';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 
 import { api } from '@/shared/api';
@@ -9,6 +10,7 @@ import type { HouseholdState, LiveRecommendation, UserProfile } from '@/shared/t
 
 import { POLL_INTERVAL_MS } from '../constants';
 import { buildMockHouseholdState, mockLiveRecommendation } from './mockLive';
+import { pushWidgetUpdate } from './widgetSync';
 
 export { buildMockHouseholdState };
 
@@ -52,6 +54,12 @@ export function useLiveRecommendation(
   // — if all entries are cached/synthetic, the banner tells the user.
   const usingMock =
     query.data?.orthogonal_calls_made?.every((c) => c.status === 'cached') ?? false;
+
+  // Mirror the latest recommendation into the iOS home-screen widget.
+  // No-op on Android/web via the @bacons/apple-targets polyfill.
+  useEffect(() => {
+    if (query.data) pushWidgetUpdate(query.data);
+  }, [query.data]);
 
   return { query, state, usingMock };
 }
