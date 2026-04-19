@@ -179,10 +179,26 @@ def compute_roi(
     discount_factors = 1.0 / ((1 + DISCOUNT_RATE) ** years)
     npv = -net_upfront + float(np.sum((savings - maintenance) * discount_factors))
 
-    # Payback (undiscounted)
-    cumulative = np.cumsum(savings - maintenance)
-    payback_idx = np.argmax(cumulative >= net_upfront) if (cumulative >= net_upfront).any() else -1
-    payback_years = float(payback_idx + 1) if payback_idx >= 0 else float(LIFETIME_YEARS + 1)
+    # Payback (undiscounted). Linearly interpolate between the year
+    # before crossing and the year of crossing so payback is a real
+    # fractional number of years, not the always-integer first-crossing
+    # index. Without this, every address with similar inputs rounds to
+    # the same whole-year payback (e.g. "4.0y" for every SoCal run).
+    net_cashflow = savings - maintenance
+    cumulative = np.cumsum(net_cashflow)
+    mask = cumulative >= net_upfront
+    if not mask.any():
+        payback_years = float(LIFETIME_YEARS + 1)
+    else:
+        i = int(np.argmax(mask))
+        prev_cum = float(cumulative[i - 1]) if i > 0 else 0.0
+        this_year_net = float(net_cashflow[i])
+        if this_year_net > 0:
+            fraction = (net_upfront - prev_cum) / this_year_net
+            fraction = float(np.clip(fraction, 0.0, 1.0))
+        else:
+            fraction = 1.0
+        payback_years = float(i) + fraction
 
     co2_tons = float(np.sum(production) * CA_GRID_INTENSITY_TONS_PER_KWH)
 
