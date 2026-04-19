@@ -72,3 +72,6 @@ Thumbs.db
 *.tmp
 .tmp/
 tmp/
+
+# --- Local debug probes (e.g. backend/_roi_probe*.json) ---
+_*.json
