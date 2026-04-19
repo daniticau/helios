@@ -53,7 +53,7 @@
       ]
     ],
     "extra": {
-      "apiBaseUrl": "http://100.112.112.240:8000",
+      "apiBaseUrl": "http://100.109.21.26:8000",
       "supabaseUrl": "",
       "supabasePublishableKey": "",
       "eas": {
