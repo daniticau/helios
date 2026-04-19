@@ -73,7 +73,7 @@ export function AddressStep({ initialAddress, onContinue, onUseDemo }: AddressSt
           type="button"
           disabled={!canContinue}
           onClick={() => onContinue({ address: address.trim() })}
-          className="group relative inline-flex w-full items-center justify-between overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-7 py-4 text-[13px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-bg)] transition disabled:cursor-not-allowed disabled:opacity-35"
+          className="group relative inline-flex w-full items-center justify-between overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-7 py-4 text-[13px] font-semibold text-[color:var(--color-bg)] transition disabled:cursor-not-allowed disabled:opacity-35"
           style={{ fontFamily: 'var(--font-mono)' }}
         >
           <span className="relative z-10">continue · step 02</span>

@@ -62,7 +62,7 @@ export function Header() {
         >
           <Link
             href="/install"
-            className={`text-xs uppercase tracking-[0.14em] transition ${
+            className={`text-xs transition ${
               installActive
                 ? 'text-[color:var(--color-accent)]'
                 : 'text-[color:var(--color-text-muted)] hover:text-[color:var(--color-text)]'
@@ -74,7 +74,7 @@ export function Header() {
             href="https://github.com/daniticau/helios"
             target="_blank"
             rel="noreferrer"
-            className="hidden text-xs uppercase tracking-[0.14em] text-[color:var(--color-text-muted)] hover:text-[color:var(--color-text)] sm:inline"
+            className="hidden text-xs text-[color:var(--color-text-muted)] hover:text-[color:var(--color-text)] sm:inline"
           >
             source
           </a>
@@ -93,7 +93,7 @@ export function Header() {
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-text-dim)] hover:text-[color:var(--color-accent)]"
+                className="text-[11px] text-[color:var(--color-text-dim)] hover:text-[color:var(--color-accent)]"
               >
                 sign out
               </button>
@@ -101,7 +101,7 @@ export function Header() {
           ) : (
             <Link
               href="/login"
-              className={`text-xs uppercase tracking-[0.14em] transition ${
+              className={`text-xs transition ${
                 loginActive
                   ? 'text-[color:var(--color-accent)]'
                   : 'text-[color:var(--color-text)] hover:text-[color:var(--color-accent)]'

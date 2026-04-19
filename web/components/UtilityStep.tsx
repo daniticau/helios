@@ -117,7 +117,7 @@ export function UtilityStep({ initial, onSubmit, onBack }: UtilityStepProps) {
         <button
           type="button"
           onClick={onBack}
-          className="group inline-flex items-center gap-2 border border-[color:var(--color-border)] bg-[color:var(--color-card)]/60 px-5 py-3.5 text-[12px] uppercase tracking-[0.18em] text-[color:var(--color-text-muted)] transition hover:border-[color:var(--color-accent)]/50 hover:text-[color:var(--color-text)]"
+          className="group inline-flex items-center gap-2 border border-[color:var(--color-border)] bg-[color:var(--color-card)]/60 px-5 py-3.5 text-[12px] text-[color:var(--color-text-muted)] transition hover:border-[color:var(--color-accent)]/50 hover:text-[color:var(--color-text)]"
           style={{ fontFamily: 'var(--font-mono)' }}
         >
           <span>←</span>
@@ -133,7 +133,7 @@ export function UtilityStep({ initial, onSubmit, onBack }: UtilityStepProps) {
               monthly_kwh: kwhNum,
             })
           }
-          className="group relative flex flex-1 items-center justify-between overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-6 py-3.5 text-[13px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-bg)] transition disabled:cursor-not-allowed disabled:opacity-35"
+          className="group relative flex flex-1 items-center justify-between overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-6 py-3.5 text-[13px] font-semibold text-[color:var(--color-bg)] transition disabled:cursor-not-allowed disabled:opacity-35"
           style={{ fontFamily: 'var(--font-mono)' }}
         >
           <span className="relative z-10">run the numbers</span>

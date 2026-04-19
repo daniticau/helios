@@ -7,7 +7,7 @@ export default function NotFound() {
   return (
     <main className="mx-auto flex min-h-screen max-w-[720px] flex-col items-start justify-center px-6">
       <div
-        className="text-[10.5px] uppercase tracking-[0.32em] text-[color:var(--color-accent)]"
+        className="text-[10.5px] text-[color:var(--color-accent)]"
         style={{ fontFamily: 'var(--font-mono)' }}
       >
         // signal lost · 404
@@ -31,7 +31,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/"
-        className="mt-9 inline-flex items-center gap-2 rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card)] px-5 py-3 text-[12px] uppercase tracking-[0.26em] text-[color:var(--color-text)] hover:border-[color:var(--color-accent)]"
+        className="mt-9 inline-flex items-center gap-2 rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card)] px-5 py-3 text-[12px] text-[color:var(--color-text)] hover:border-[color:var(--color-accent)]"
         style={{ fontFamily: 'var(--font-mono)' }}
       >
         ← return to mission

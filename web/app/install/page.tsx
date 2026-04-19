@@ -201,7 +201,7 @@ function InstallFlow() {
               <button
                 type="button"
                 onClick={() => setStep('address')}
-                className="rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card)] px-6 py-3 text-[12px] uppercase tracking-[0.18em] text-[color:var(--color-text)] hover:border-[color:var(--color-accent)]"
+                className="rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card)] px-6 py-3 text-[12px] text-[color:var(--color-text)] hover:border-[color:var(--color-accent)]"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
                 ← start over
@@ -241,10 +241,10 @@ function ProgressStrip({ step }: { step: Step }) {
               : 'text-[color:var(--color-text-dimmer)]';
           return (
             <div key={s} className="flex items-center gap-2">
-              <span className={`text-[12px] uppercase tracking-[0.12em] tabular-nums ${numColor}`}>
+              <span className={`text-[12px] tabular-nums ${numColor}`}>
                 {i === 0 ? 'step 01' : `0${i + 1}`}
               </span>
-              <span className={`text-[12px] uppercase tracking-[0.12em] ${labelColor}`}>
+              <span className={`text-[12px] ${labelColor}`}>
                 {STEP_LABELS[s]}
               </span>
               {i < STEP_ORDER.length - 1 && (
@@ -396,7 +396,7 @@ function ResultView({
       <button
         type="button"
         onClick={onRunAgain}
-        className="group relative flex w-full items-center justify-between overflow-hidden rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)]/80 px-6 py-4 text-[12.5px] uppercase tracking-[0.18em] text-[color:var(--color-text)] transition hover:border-[color:var(--color-accent)]"
+        className="group relative flex w-full items-center justify-between overflow-hidden rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)]/80 px-6 py-4 text-[12.5px] text-[color:var(--color-text)] transition hover:border-[color:var(--color-accent)]"
         style={{ fontFamily: 'var(--font-mono)' }}
       >
         <span>run again</span>

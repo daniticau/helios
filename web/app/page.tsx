@@ -66,7 +66,7 @@ export default function LandingPage() {
               <div className="flex flex-wrap items-center gap-4 pt-1">
                 <Link
                   href="/install"
-                  className="group relative inline-flex items-center gap-3 overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-7 py-4 text-[13.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-bg)] transition"
+                  className="group relative inline-flex items-center gap-3 overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-7 py-4 text-[13.5px] font-semibold text-[color:var(--color-bg)] transition"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   <span className="relative z-10">run on your address</span>
@@ -77,7 +77,7 @@ export default function LandingPage() {
                   href="https://github.com/daniticau/helios"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[12px] uppercase tracking-[0.16em] text-[color:var(--color-text-muted)] hover:text-[color:var(--color-accent)]"
+                  className="text-[12px] text-[color:var(--color-text-muted)] hover:text-[color:var(--color-accent)]"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   view source ↗
@@ -196,7 +196,7 @@ export default function LandingPage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/install"
-                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-7 py-3.5 text-[13px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-bg)]"
+                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-7 py-3.5 text-[13px] font-semibold text-[color:var(--color-bg)]"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
                 <span className="relative z-10">start estimate →</span>
@@ -204,7 +204,7 @@ export default function LandingPage() {
               </Link>
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)]/80 px-7 py-3.5 text-[13px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text)] hover:border-[color:var(--color-accent)]"
+                className="inline-flex items-center gap-2 rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)]/80 px-7 py-3.5 text-[13px] font-semibold text-[color:var(--color-text)] hover:border-[color:var(--color-accent)]"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
                 sign in to save
@@ -282,12 +282,12 @@ function InstrumentPanel({
             className="h-2 w-2 rounded-full bg-[color:var(--color-success)]"
             style={{ boxShadow: '0 0 6px rgba(135,214,125,0.7)' }}
           />
-          <span className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--color-accent)]">
+          <span className="text-[11px] text-[color:var(--color-accent)]">
             orthogonal · fan-out
           </span>
           <span className="caret-blink text-[color:var(--color-accent)]">▌</span>
         </div>
-        <div className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-text-dim)]">
+        <div className="text-[11px] text-[color:var(--color-text-dim)]">
           10/10
         </div>
       </div>

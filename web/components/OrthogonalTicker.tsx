@@ -159,7 +159,7 @@ function LatencyCounter({
   return (
     <span className="flex items-baseline justify-end gap-2">
       <span
-        className="text-[9px] font-semibold uppercase tracking-[0.2em]"
+        className="text-[9px] font-semibold"
         style={{ color: STATUS_COLOR[call.status], fontFamily: 'var(--font-mono)' }}
       >
         {STATUS_LABEL[call.status]}
@@ -316,7 +316,7 @@ function TickerHeader({
   const total = EXPECTED_SLOTS.length;
   return (
     <div
-      className="flex items-center justify-between gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/40 px-4 py-2.5 text-[10px] uppercase tracking-[0.24em] text-[color:var(--color-text-muted)]"
+      className="flex items-center justify-between gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/40 px-4 py-2.5 text-[10px] text-[color:var(--color-text-muted)]"
       style={{ fontFamily: 'var(--font-mono)' }}
     >
       <div className="flex items-center gap-2">

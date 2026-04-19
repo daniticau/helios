@@ -136,7 +136,7 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={handleGithub}
-                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)]/70 px-6 py-4 text-[12.5px] uppercase tracking-[0.18em] text-[color:var(--color-text)] transition hover:border-[color:var(--color-accent)]"
+                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)]/70 px-6 py-4 text-[12.5px] text-[color:var(--color-text)] transition hover:border-[color:var(--color-accent)]"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
                 <svg className="relative z-10 h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -153,7 +153,7 @@ function LoginForm() {
               <div className="my-7 flex items-center gap-3">
                 <div className="h-px flex-1 bg-[color:var(--color-border)]" />
                 <span
-                  className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--color-text-dim)]"
+                  className="text-[11px] text-[color:var(--color-text-dim)]"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   or
@@ -201,7 +201,7 @@ function LoginForm() {
                   <button
                     type="submit"
                     disabled={status === 'sending'}
-                    className="group relative flex w-full items-center justify-between overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-6 py-3.5 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-bg)] disabled:opacity-40"
+                    className="group relative flex w-full items-center justify-between overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-6 py-3.5 text-[12.5px] font-semibold text-[color:var(--color-bg)] disabled:opacity-40"
                     style={{ fontFamily: 'var(--font-mono)' }}
                   >
                     <span className="relative z-10">
@@ -225,7 +225,7 @@ function LoginForm() {
               <div className="mt-10 flex items-center justify-end border-t border-[color:var(--color-hairline)] pt-5">
                 <Link
                   href="/install"
-                  className="text-[12px] uppercase tracking-[0.18em] text-[color:var(--color-text-muted)] hover:text-[color:var(--color-accent)]"
+                  className="text-[12px] text-[color:var(--color-text-muted)] hover:text-[color:var(--color-accent)]"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   continue without signing in →
