@@ -56,10 +56,12 @@ export function useLiveRecommendation(
     query.data?.orthogonal_calls_made?.every((c) => c.status === 'cached') ?? false;
 
   // Mirror the latest recommendation into the iOS home-screen widget.
-  // No-op on Android/web via the @bacons/apple-targets polyfill.
+  // No-op on Android/web via the @bacons/apple-targets polyfill. We pass
+  // the current household state so the widget can render SoC + peak
+  // countdown alongside the action + hourly gain.
   useEffect(() => {
-    if (query.data) pushWidgetUpdate(query.data);
-  }, [query.data]);
+    if (query.data) pushWidgetUpdate(query.data, state);
+  }, [query.data, state]);
 
   return { query, state, usingMock };
 }

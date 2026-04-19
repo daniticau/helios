@@ -18,9 +18,11 @@ module.exports = (config) => ({
     textDim: '#666666',
   },
   entitlements: {
+    // Keep this fallback in sync with app.json + Provider.swift; the
+    // primary value comes from app.json's ios.entitlements.
     'com.apple.security.application-groups':
       config.ios?.entitlements?.['com.apple.security.application-groups'] ?? [
-        'group.com.helios.app',
+        'group.com.helios.app.shared',
       ],
   },
 });
