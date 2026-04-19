@@ -20,7 +20,7 @@ import type { UtilityCode } from '@/shared/types';
 
 import { PrimaryButton } from '../components/PrimaryButton';
 import type { ModeAScreenProps } from '../navigation';
-import { colors, fontSizes, mono, radius, spacing } from '../theme';
+import { colors, fonts, fontSizes, mono, radius, spacing } from '../theme';
 
 const UTILITIES: ReadonlyArray<{ code: UtilityCode; label: string }> = [
   { code: 'PGE', label: 'PG&E' },
@@ -218,8 +218,8 @@ const styles = StyleSheet.create({
   },
   headline: {
     color: colors.text,
+    fontFamily: fonts.displaySoft,
     fontSize: fontSizes.xl,
-    fontWeight: '700',
     letterSpacing: -0.6,
     marginTop: spacing.xs,
   },
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + 2,
     alignItems: 'center',
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     paddingHorizontal: spacing.md,
   },
   input: {

@@ -6,7 +6,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { LiveAction } from '@/shared/types';
 
-import { fonts } from '../../modeA/theme';
+import { fonts, radius } from '../../modeA/theme';
 import { COLORS } from '../constants';
 
 interface Props {
@@ -89,7 +89,7 @@ export function RateCompare({ retailRate, exportRate, action }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.card,
-    borderRadius: 16,
+    borderRadius: radius.card,
     padding: 20,
     gap: 16,
   },

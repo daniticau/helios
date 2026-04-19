@@ -513,7 +513,7 @@ export function OrthogonalTicker({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     paddingVertical: spacing.md,

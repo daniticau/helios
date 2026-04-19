@@ -34,15 +34,18 @@ export function AlertBanner({ variant = 'warning', title, detail }: Props) {
   );
 }
 
+// Tinted-overlay backgrounds echo the web's `bg-[color:var(--color-accent)]/10`
+// pattern — 10% alpha on the accent/info color over the dark bg, so the
+// border and icon still read as the semantic tone without a heavy fill.
 const warning = {
-  bg: '#2a2118',
+  bg: 'rgba(224, 169, 58, 0.1)', // colors.warning @ 10%
   border: colors.warning,
   fg: colors.warning,
   icon: 'alert-triangle' as const,
 };
 
 const info = {
-  bg: '#1a2230',
+  bg: 'rgba(111, 159, 211, 0.1)', // colors.info @ 10%
   border: colors.info,
   fg: colors.info,
   icon: 'info' as const,
@@ -53,7 +56,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm + 2,
     borderWidth: 1,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
     alignItems: 'flex-start',

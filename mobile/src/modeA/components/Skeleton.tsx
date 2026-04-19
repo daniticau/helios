@@ -22,7 +22,7 @@ interface Props {
   style?: View['props']['style'];
 }
 
-export function Skeleton({ width = '100%', height, radius = radiusTokens.md, style }: Props) {
+export function Skeleton({ width = '100%', height, radius = radiusTokens.card, style }: Props) {
   const pulse = useSharedValue(0.55);
 
   useEffect(() => {

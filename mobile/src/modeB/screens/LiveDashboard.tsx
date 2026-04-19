@@ -19,6 +19,7 @@ import {
 
 import { useProfileStore } from '@/shared/store';
 
+import { radius } from '../../modeA/theme';
 import { ActionHeroCard } from '../components/ActionHeroCard';
 import { BatteryGauge } from '../components/BatteryGauge';
 import { ForecastChart } from '../components/ForecastChart';
@@ -218,7 +219,7 @@ const styles = StyleSheet.create({
   loadingCard: {
     backgroundColor: COLORS.card,
     padding: 40,
-    borderRadius: 16,
+    borderRadius: radius.card,
     alignItems: 'center',
     gap: 12,
   },
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
   errorCard: {
     backgroundColor: COLORS.card,
     padding: 20,
-    borderRadius: 16,
+    borderRadius: radius.card,
     gap: 8,
     borderColor: COLORS.red,
     borderWidth: 1,
@@ -247,7 +248,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.card,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    borderRadius: 14,
+    borderRadius: radius.card,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
   callsCard: {
     backgroundColor: COLORS.card,
     padding: 16,
-    borderRadius: 14,
+    borderRadius: radius.card,
     gap: 4,
   },
   callsHeader: {
@@ -273,7 +274,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     backgroundColor: COLORS.card,
-    borderRadius: 14,
+    borderRadius: radius.card,
   },
   sourcesChevron: {
     color: COLORS.accent,

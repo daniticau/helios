@@ -41,7 +41,7 @@ export function SystemSizeCard({ system, tariffSummary }: SystemSizeCardProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,

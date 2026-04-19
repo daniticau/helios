@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { PeakWindow } from '@/shared/types';
 
+import { radius } from '../../modeA/theme';
 import { COLORS } from '../constants';
 
 interface Props {
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(245, 215, 110, 0.1)',
     borderColor: COLORS.accent,
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: radius.card,
     padding: 14,
   },
   iconWrap: {

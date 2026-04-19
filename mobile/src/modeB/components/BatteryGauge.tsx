@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { HouseholdState, LiveAction } from '@/shared/types';
 
+import { radius } from '../../modeA/theme';
 import { ACTION_META, COLORS } from '../constants';
 
 interface Props {
@@ -94,7 +95,7 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
 const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.card,
-    borderRadius: 16,
+    borderRadius: radius.card,
     padding: 20,
     gap: 16,
   },

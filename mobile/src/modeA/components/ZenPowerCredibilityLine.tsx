@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     backgroundColor: colors.bgElevated,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     paddingVertical: spacing.sm + 2,

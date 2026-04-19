@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { LiveRecommendation } from '@/shared/types';
 
-import { fonts } from '../../modeA/theme';
+import { fonts, radius } from '../../modeA/theme';
 import { ACTION_META, COLORS } from '../constants';
 
 interface Props {
@@ -41,10 +41,10 @@ export function ActionHeroCard({ rec }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.card,
-    borderRadius: 20,
+    borderRadius: radius.card,
     padding: 24,
     gap: 12,
-    borderWidth: 1.5,
+    borderWidth: 1,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   dot: { width: 10, height: 10, borderRadius: 5 },

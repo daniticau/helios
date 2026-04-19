@@ -11,6 +11,7 @@ import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-
 
 import type { ForecastPoint, PeakWindow } from '@/shared/types';
 
+import { radius } from '../../modeA/theme';
 import { COLORS } from '../constants';
 
 interface Props {
@@ -211,7 +212,7 @@ function LegendDot({ color, label }: { color: string; label: string }) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.card,
-    borderRadius: 16,
+    borderRadius: radius.card,
     padding: 16,
     gap: 8,
   },

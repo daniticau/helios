@@ -27,7 +27,7 @@ import { OrthogonalTicker } from '../components/OrthogonalTicker';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { useROIStream } from '../hooks/useROI';
 import type { ModeAScreenProps } from '../navigation';
-import { colors, fontSizes, mono, radius, spacing } from '../theme';
+import { colors, fonts, fontSizes, mono, radius, spacing } from '../theme';
 
 // Rotating subtitle lines that cycle while the fan-out is in flight. Each
 // line mirrors a concrete step in the orchestrator so the user feels like
@@ -260,8 +260,8 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: colors.text,
+    fontFamily: fonts.displaySoft,
     fontSize: fontSizes.lg,
-    fontWeight: '500',
     letterSpacing: -0.3,
     flexShrink: 1,
   },
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   },
   errorBlock: {
     backgroundColor: colors.bgElevated,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.error,

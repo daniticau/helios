@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
   recapTicker: {
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     paddingVertical: spacing.sm,

@@ -22,7 +22,7 @@ import { DEMO_PROFILE, useProfileStore } from '@/shared/store';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { Skeleton } from '../components/Skeleton';
 import type { ModeAScreenProps } from '../navigation';
-import { colors, fontSizes, mono, radius, spacing } from '../theme';
+import { colors, fonts, fontSizes, mono, radius, spacing } from '../theme';
 
 export function OnboardAddress({ navigation }: ModeAScreenProps<'OnboardAddress'>) {
   const profile = useProfileStore((s) => s.profile);
@@ -207,8 +207,8 @@ const styles = StyleSheet.create({
   },
   headline: {
     color: colors.text,
+    fontFamily: fonts.displaySoft,
     fontSize: fontSizes.xl,
-    fontWeight: '700',
     letterSpacing: -0.6,
     marginTop: spacing.sm,
   },
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     paddingVertical: 18,
@@ -260,10 +260,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: '#2a1818',
+    backgroundColor: colors.bgElevated,
     borderWidth: 1,
     borderColor: colors.error,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
   },

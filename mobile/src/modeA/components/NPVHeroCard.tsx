@@ -45,7 +45,7 @@ export function NPVHeroCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.card,
-    borderRadius: radius.xl,
+    borderRadius: radius.card,
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
     borderWidth: 1,

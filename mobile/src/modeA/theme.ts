@@ -41,6 +41,10 @@ export const spacing = {
 } as const;
 
 export const radius = {
+  // Card/input/banner chrome. Matches web's Tailwind `rounded-sm` so both
+  // platforms read as the same object family. Use this on surfaces that
+  // should feel rectangular-with-a-hint.
+  card: 4,
   sm: 6,
   md: 12,
   lg: 16,
