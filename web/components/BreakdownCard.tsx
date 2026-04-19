@@ -1,4 +1,4 @@
-// Terminal-table line items — upfront, ITC, net, savings, CO2, ROI % of home.
+// Line items — upfront, ITC, net, savings, CO2, ROI % of home.
 
 interface BreakdownCardProps {
   upfrontCostUsd: number;
@@ -34,10 +34,10 @@ function Row({
   return (
     <div className="grid grid-cols-[1fr_auto] items-start gap-6 py-2.5">
       <div className="min-w-0">
-        <div className="text-[14px] text-[color:var(--color-text)]">{label}</div>
+        <div className="text-[14.5px] text-[color:var(--color-text)]">{label}</div>
         {sub && (
           <div
-            className="mt-1 text-[10.5px] text-[color:var(--color-text-dim)]"
+            className="mt-1 text-[12px] text-[color:var(--color-text-dim)]"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {sub}
@@ -72,18 +72,6 @@ function Row({
   );
 }
 
-function SectionHeader({ n, label }: { n: string; label: string }) {
-  return (
-    <div
-      className="flex items-center gap-3 border-b border-[color:var(--color-hairline)] pb-2 pt-4 text-[9.5px] uppercase tracking-[0.3em] text-[color:var(--color-text-dim)]"
-      style={{ fontFamily: 'var(--font-mono)' }}
-    >
-      <span className="text-[color:var(--color-accent)]">{n}</span>
-      {label}
-    </div>
-  );
-}
-
 export function BreakdownCard({
   upfrontCostUsd,
   federalItcUsd,
@@ -101,17 +89,10 @@ export function BreakdownCard({
     socialCostOfCarbonUsd != null ? co2AvoidedTons25yr * socialCostOfCarbonUsd : null;
 
   return (
-    <div className="overflow-hidden rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card)]/60">
-      <div
-        className="flex items-center justify-between border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.3em] text-[color:var(--color-text-dim)]"
-        style={{ fontFamily: 'var(--font-mono)' }}
-      >
-        <span className="text-[color:var(--color-accent)]">▸ the numbers</span>
-        <span>line · items</span>
-      </div>
+    <div className="rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card)]/60 px-5 py-5">
+      <div className="type-eyebrow">the numbers</div>
 
-      <div className="px-5 pb-4">
-        <SectionHeader n="01" label="upfront · installation" />
+      <div className="mt-3">
         <Row
           label="Installer quote (estimated)"
           sub={`market range ${fmt0(quoteMin)} – ${fmt0(quoteMax)}`}
@@ -126,12 +107,12 @@ export function BreakdownCard({
         <div className="my-2 h-px bg-[color:var(--color-border)]" />
         <Row label="Net upfront" value={fmt0(netUpfrontUsd)} accent />
 
-        <SectionHeader n="02" label="operating · year 1" />
+        <div className="my-4 h-px bg-[color:var(--color-border)]" />
+
         <Row label="Year 1 savings" value={fmt0(annualSavingsYr1Usd)} sign="+" />
         <Row
           label="Financing APR range"
           value={`${(financeMin * 100).toFixed(1)} – ${(financeMax * 100).toFixed(1)}%`}
-          sub="solar loan market"
         />
         {roiPctOfHomeValue != null && (
           <Row
@@ -140,7 +121,8 @@ export function BreakdownCard({
           />
         )}
 
-        <SectionHeader n="03" label="carbon · 25 yr" />
+        <div className="my-4 h-px bg-[color:var(--color-border)]" />
+
         <Row
           label="CO₂ avoided over 25 yrs"
           value={`${co2AvoidedTons25yr.toFixed(1)} tons`}

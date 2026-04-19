@@ -1,5 +1,5 @@
 // Hero numbers: payback years (massive Fraunces) + 25yr NPV. The payoff
-// after 20 seconds of fan-out — give it proper editorial weight.
+// after 20 seconds of fan-out.
 
 import { motion } from 'framer-motion';
 
@@ -32,7 +32,7 @@ export function NPVHeroCard({
           'linear-gradient(160deg, var(--color-card) 0%, var(--color-card-elevated) 70%, var(--color-bg-elevated) 100%), radial-gradient(circle at 95% -20%, rgba(245,215,110,0.18), transparent 55%)',
       }}
     >
-      {/* sunburst decoration */}
+      {/* sunburst decoration — DO NOT remove */}
       <div
         className="pointer-events-none absolute -right-10 -top-12 h-48 w-48 rounded-full border border-dashed border-[color:var(--color-accent)]/25 anim-sunbeam"
         style={{ animationDuration: '40s' }}
@@ -43,29 +43,9 @@ export function NPVHeroCard({
       />
 
       <div className="relative px-7 py-9 sm:px-10 sm:py-12">
-        {/* header strip */}
-        <div
-          className="flex items-center justify-between border-b border-[color:var(--color-hairline)] pb-4 text-[10px] uppercase tracking-[0.32em] text-[color:var(--color-text-dim)]"
-          style={{ fontFamily: 'var(--font-mono)' }}
-        >
-          <span className="flex items-center gap-2">
-            <span
-              className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-accent)]"
-              style={{ boxShadow: '0 0 5px rgba(245,215,110,0.7)' }}
-            />
-            result · npv
-          </span>
-          <span>settled · t+20s</span>
-        </div>
-
         {/* Payback */}
-        <div className="mt-10 space-y-2">
-          <div
-            className="text-[10px] uppercase tracking-[0.32em] text-[color:var(--color-text-muted)]"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
-            break even in
-          </div>
+        <div className="space-y-2">
+          <div className="type-eyebrow">break even in</div>
           <div className="flex items-end gap-3">
             <motion.span
               initial={{ opacity: 0, y: 18 }}
@@ -90,7 +70,7 @@ export function NPVHeroCard({
                 years
               </span>
               <span
-                className="mt-1 text-[10px] uppercase tracking-[0.22em] text-[color:var(--color-text-dim)]"
+                className="mt-1 text-[12px] text-[color:var(--color-text-dim)]"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
                 to recover upfront
@@ -99,26 +79,12 @@ export function NPVHeroCard({
           </div>
         </div>
 
-        {/* Divider with ticks */}
-        <div className="my-9 flex items-center gap-2">
-          <div className="h-px flex-1 bg-[color:var(--color-border)]" />
-          <span
-            className="text-[9px] uppercase tracking-[0.3em] text-[color:var(--color-text-dim)]"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
-            + 25 yr horizon
-          </span>
-          <div className="h-px flex-1 bg-[color:var(--color-border)]" />
-        </div>
+        {/* Hairline divider */}
+        <div className="my-9 h-px bg-[color:var(--color-accent)]/25" />
 
         {/* NPV */}
         <div className="space-y-2">
-          <div
-            className="text-[10px] uppercase tracking-[0.32em] text-[color:var(--color-text-muted)]"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
-            net present value · 25 yr
-          </div>
+          <div className="type-eyebrow">net present value, 25 yr</div>
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -136,10 +102,10 @@ export function NPVHeroCard({
             {formatUsd(npv25yrUsd)}
           </motion.div>
           <div
-            className="mt-2 text-[12.5px] text-[color:var(--color-text-muted)]"
+            className="mt-2 text-[13px] text-[color:var(--color-text-muted)]"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
-            ≈ <span className="text-[color:var(--color-text)]">{formatUsd(annualSavingsYr1)}</span> / yr savings · year 1
+            about <span className="text-[color:var(--color-text)]">{formatUsd(annualSavingsYr1)}</span> per year in year-one savings
           </div>
         </div>
       </div>

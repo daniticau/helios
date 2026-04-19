@@ -24,7 +24,7 @@ export function ActionHeroCard({ rec }: Props) {
       </View>
 
       <Text style={[styles.action, { color: meta.color }]}>
-        {meta.glyph}  {meta.label}
+        {meta.label}
       </Text>
 
       <View style={styles.gainRow}>
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   dot: { width: 10, height: 10, borderRadius: 5 },
-  label: { color: COLORS.textMuted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
+  label: { color: COLORS.textMuted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1.2 },
   action: { fontSize: 26, fontWeight: '700', lineHeight: 32 },
   gainRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 4 },
   gain: { fontSize: 44, fontWeight: '800', letterSpacing: -1 },
@@ -73,6 +73,6 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.border,
   },
   rateCell: { flex: 1 },
-  rateLabel: { color: COLORS.textDim, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
+  rateLabel: { color: COLORS.textDim, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.8 },
   rateValue: { color: COLORS.text, fontSize: 18, fontWeight: '600', marginTop: 4 },
 });

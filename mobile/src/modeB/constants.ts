@@ -2,6 +2,7 @@
 // and color tokens for action states.
 // Per HELIOS.md §11 demo script, Tijuana hills, 8kW + Powerwall (13.5 kWh).
 
+import { Platform, StyleSheet } from 'react-native';
 import type { LiveAction, UserProfile } from '@/shared/types';
 
 export const DEMO_PROFILE_EXISTING_OWNER: UserProfile = {
@@ -78,7 +79,7 @@ export const ACTION_META: Record<LiveAction, ActionMeta> = {
     verb: 'Exporting',
   },
   HOLD: {
-    label: 'Hold — wait for better rates',
+    label: 'Hold, wait for better rates',
     color: COLORS.gray,
     glyph: '•',
     verb: 'Holding',
@@ -86,3 +87,43 @@ export const ACTION_META: Record<LiveAction, ActionMeta> = {
 };
 
 export const POLL_INTERVAL_MS = 60_000;
+
+// Monospace stack for latency numerals and any terminal-style copy.
+const mono = Platform.select({
+  ios: 'Menlo',
+  android: 'monospace',
+  default: 'Menlo',
+});
+
+// Shared label primitives, mirrors mobile/src/modeA/theme.ts.
+export const textStyles = StyleSheet.create({
+  eyebrow: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    fontFamily: mono,
+    fontWeight: '500',
+  },
+  eyebrowAccent: {
+    color: COLORS.accent,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    fontFamily: mono,
+    fontWeight: '500',
+  },
+  eyebrowDim: {
+    color: COLORS.textDim,
+    fontSize: 11.5,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    fontFamily: mono,
+  },
+  sectionLabel: {
+    color: COLORS.textMuted,
+    fontSize: 13,
+    letterSpacing: 0.4,
+    fontWeight: '500',
+  },
+});

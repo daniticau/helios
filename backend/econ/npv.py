@@ -33,37 +33,41 @@ BATTERY_USD_PER_KWH = 900.0
 # evening peaks. Based on CAISO aggregate residential load profiles.
 _DAILY_LOAD_SHAPE = np.array(
     [
-        0.9, 0.8, 0.75, 0.7, 0.7, 0.8,    # 00–05 overnight baseline
-        1.0, 1.3, 1.2, 1.0, 0.85, 0.75,   # 06–11 morning peak then taper
-        0.7, 0.7, 0.75, 0.85, 1.1, 1.45,  # 12–17 ramp into evening
-        1.75, 1.7, 1.5, 1.25, 1.05, 0.95, # 18–23 evening peak
-    ]
+        0.9, 0.8, 0.75, 0.7, 0.7, 0.8,    # 00-05 overnight baseline
+        1.0, 1.3, 1.2, 1.0, 0.85, 0.75,   # 06-11 morning peak then taper
+        0.7, 0.7, 0.75, 0.85, 1.1, 1.45,  # 12-17 ramp into evening
+        1.75, 1.7, 1.5, 1.25, 1.05, 0.95, # 18-23 evening peak
+    ],
+    dtype=float,
 )
+_DAILY_LOAD_SHAPE_SUM = float(_DAILY_LOAD_SHAPE.sum())
+
+_HOURS = np.arange(24, dtype=float)
+_DAYLIGHT_MASK = (_HOURS >= 6) & (_HOURS <= 19)
+_PHASE = (_HOURS - 6.0) / 13.0
+_CLEAR_SKY_BELL = np.where(
+    _DAYLIGHT_MASK,
+    np.maximum(0.0, 1.0 - ((_PHASE - 0.5) * 2.0) ** 2),
+    0.0,
+)
+_CLEAR_SKY_BELL_SUM = float(_CLEAR_SKY_BELL.sum())
 
 
 def _normalized_daily_load(daily_kwh: float) -> np.ndarray:
     """Return a 24-float array summing exactly to ``daily_kwh``."""
-    shape = _DAILY_LOAD_SHAPE
-    return shape / shape.sum() * daily_kwh
+    return _DAILY_LOAD_SHAPE * (daily_kwh / _DAILY_LOAD_SHAPE_SUM)
 
 
 def _hourly_production_clear_sky(system_kw: float, irradiance_factor: float) -> np.ndarray:
     """Clear-sky bell production curve (24,) scaled so the annual total
     matches ``KWH_PER_KW_PER_YEAR_SOCAL`` * system_kw * irradiance_factor.
     """
-    hours = np.arange(24)
-    bell = np.zeros(24)
-    for h in hours:
-        if 6 <= h <= 19:
-            phase = (h - 6) / 13.0
-            bell[h] = max(0.0, 1 - ((phase - 0.5) * 2) ** 2)
     # Scale the bell so daily production = annual / 365
     annual_kwh = system_kw * KWH_PER_KW_PER_YEAR_SOCAL * irradiance_factor
     daily_kwh = annual_kwh / 365.0
-    bell_sum = bell.sum()
-    if bell_sum <= 0:
+    if _CLEAR_SKY_BELL_SUM <= 0:
         return np.zeros(24)
-    return bell * (daily_kwh / bell_sum)
+    return _CLEAR_SKY_BELL * (daily_kwh / _CLEAR_SKY_BELL_SUM)
 
 
 def compute_annual_savings_hourly(
@@ -78,8 +82,8 @@ def compute_annual_savings_hourly(
     export_h, summed over 24 hours, times 365.
     """
     tariff = resolve_tariff(profile.utility, profile.tariff_plan)
-    retail_by_hour = np.array(tariff.retail_by_hour)
-    export_by_hour = np.array(tariff.export_by_hour)
+    retail_by_hour = np.asarray(tariff.retail_by_hour, dtype=float)
+    export_by_hour = np.asarray(tariff.export_by_hour, dtype=float)
 
     daily_kwh = max(profile.monthly_kwh * 12.0 / 365.0, 0.1)
     load_h = _normalized_daily_load(daily_kwh)
@@ -112,8 +116,8 @@ def _battery_arbitrage_uplift(
     if system.battery_kwh <= 0:
         return 0.0
     tariff = resolve_tariff(profile.utility, profile.tariff_plan)
-    retail = np.array(tariff.retail_by_hour)
-    export = np.array(tariff.export_by_hour)
+    retail = np.asarray(tariff.retail_by_hour, dtype=float)
+    export = np.asarray(tariff.export_by_hour, dtype=float)
     # Usable capacity: 90% depth of discharge convention
     usable_kwh = system.battery_kwh * 0.9
     # Simplest: buy at the cheapest retail, sell at the highest export
@@ -166,8 +170,8 @@ def compute_roi(
     # retail rates; export rate also escalates but slower — we fold both
     # into one conservative ``g`` here for simplicity).
     years = np.arange(1, LIFETIME_YEARS + 1)
-    production = p0_kwh * (1 - DEGRADATION_PER_YEAR) ** years
     degradation = (1 - DEGRADATION_PER_YEAR) ** years
+    production = p0_kwh * degradation
     escalation = (1 + RATE_ESCALATION_PER_YEAR) ** years
     savings = year1_total * degradation * escalation
     maintenance = np.full_like(savings, MAINTENANCE_USD_PER_YEAR, dtype=float)

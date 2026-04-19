@@ -1,4 +1,4 @@
-// Vertical battery gauge with SoC% + current flow direction arrows.
+// Vertical battery gauge with SoC% + a single active-flow pill.
 // Flow is inferred from the LiveAction + current solar/load readings.
 
 import { StyleSheet, Text, View } from 'react-native';
@@ -13,59 +13,36 @@ interface Props {
   batteryKwh: number;
 }
 
-// Semantic flow directions: which rows of arrows to light up.
-interface FlowState {
-  solarToBattery: boolean;
-  solarToHouse: boolean;
-  solarToGrid: boolean;
-  batteryToHouse: boolean;
-  batteryToGrid: boolean;
-  gridToBattery: boolean;
-  gridToHouse: boolean;
-}
-
-function flowsFor(action: LiveAction, solar: number, load: number): FlowState {
-  const f: FlowState = {
-    solarToBattery: false,
-    solarToHouse: false,
-    solarToGrid: false,
-    batteryToHouse: false,
-    batteryToGrid: false,
-    gridToBattery: false,
-    gridToHouse: false,
-  };
-  // Solar always serves house first if producing.
-  if (solar > 0.1) f.solarToHouse = load > 0.1;
-
+// Primary flow + color per action. "Idle" means no grid/battery flip.
+function primaryFlow(
+  action: LiveAction,
+  solar: number,
+  load: number,
+): { label: string; color: string } {
   switch (action) {
     case 'CHARGE_BATTERY_FROM_SOLAR':
-      f.solarToBattery = true;
-      break;
+      return { label: 'Solar → Battery', color: COLORS.blue };
     case 'EXPORT_SOLAR':
-      f.solarToGrid = true;
-      break;
+      return { label: 'Solar → Grid', color: COLORS.blue };
     case 'DISCHARGE_BATTERY_TO_HOUSE':
-      f.batteryToHouse = true;
-      if (solar < load) f.solarToHouse = solar > 0.1;
-      break;
+      return { label: 'Battery → House', color: COLORS.green };
     case 'DISCHARGE_BATTERY_TO_GRID':
-      f.batteryToGrid = true;
-      break;
+      return { label: 'Battery → Grid', color: COLORS.green };
     case 'CHARGE_BATTERY_FROM_GRID':
-      f.gridToBattery = true;
-      if (load > 0.1) f.gridToHouse = true;
-      break;
+      return { label: 'Grid → Battery', color: COLORS.yellow };
     case 'HOLD':
-      if (load > solar) f.gridToHouse = load - solar > 0.1;
-      break;
+      if (load > solar + 0.1) return { label: 'Grid → House', color: COLORS.yellow };
+      if (solar > 0.1) return { label: 'Solar → House', color: COLORS.blue };
+      return { label: 'Idle', color: COLORS.textMuted };
+    default:
+      return { label: 'Idle', color: COLORS.textMuted };
   }
-  return f;
 }
 
 export function BatteryGauge({ state, action, batteryKwh }: Props) {
   const soc = state.battery_soc_pct;
   const meta = ACTION_META[action];
-  const flows = flowsFor(action, state.solar_kw_now, state.load_kw_now);
+  const flow = primaryFlow(action, state.solar_kw_now, state.load_kw_now);
 
   const kwhStored = (batteryKwh * soc) / 100;
 
@@ -92,13 +69,8 @@ export function BatteryGauge({ state, action, batteryKwh }: Props) {
         </View>
 
         <View style={styles.flowCol}>
-          <FlowRow label="Solar → House" active={flows.solarToHouse} color={COLORS.blue} />
-          <FlowRow label="Solar → Battery" active={flows.solarToBattery} color={COLORS.blue} />
-          <FlowRow label="Solar → Grid" active={flows.solarToGrid} color={COLORS.blue} />
-          <FlowRow label="Battery → House" active={flows.batteryToHouse} color={COLORS.green} />
-          <FlowRow label="Battery → Grid" active={flows.batteryToGrid} color={COLORS.green} />
-          <FlowRow label="Grid → Battery" active={flows.gridToBattery} color={COLORS.yellow} />
-          <FlowRow label="Grid → House" active={flows.gridToHouse} color={COLORS.yellow} />
+          <Text style={styles.flowLabel}>flow</Text>
+          <Text style={[styles.flowValue, { color: flow.color }]}>{flow.label}</Text>
         </View>
       </View>
 
@@ -106,19 +78,6 @@ export function BatteryGauge({ state, action, batteryKwh }: Props) {
         <Stat label="Solar" value={`${state.solar_kw_now.toFixed(1)} kW`} color={COLORS.blue} />
         <Stat label="Load" value={`${state.load_kw_now.toFixed(1)} kW`} color={COLORS.text} />
       </View>
-    </View>
-  );
-}
-
-function FlowRow({ label, active, color }: { label: string; active: boolean; color: string }) {
-  return (
-    <View style={styles.flowRow}>
-      <Text style={[styles.flowArrow, { color: active ? color : COLORS.textDim, opacity: active ? 1 : 0.3 }]}>
-        {active ? '▶' : '·'}
-      </Text>
-      <Text style={[styles.flowLabel, { color: active ? COLORS.text : COLORS.textDim }]}>
-        {label}
-      </Text>
     </View>
   );
 }
@@ -139,7 +98,7 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 16,
   },
-  title: { color: COLORS.textMuted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
+  title: { color: COLORS.textMuted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1.2 },
   gaugeRow: { flexDirection: 'row', gap: 24, alignItems: 'center' },
   gaugeWrap: { alignItems: 'center', gap: 8, width: 90 },
   bar: { alignItems: 'center', width: 48 },
@@ -162,11 +121,19 @@ const styles = StyleSheet.create({
   },
   fill: { width: '100%' },
   soc: { fontSize: 24, fontWeight: '700' },
-  kwh: { color: COLORS.textDim, fontSize: 11 },
-  flowCol: { flex: 1, gap: 6 },
-  flowRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  flowArrow: { fontSize: 14, width: 14 },
-  flowLabel: { fontSize: 13 },
+  kwh: { color: COLORS.textDim, fontSize: 12 },
+  flowCol: { flex: 1, gap: 6, justifyContent: 'center' },
+  flowLabel: {
+    color: COLORS.textDim,
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+  },
+  flowValue: {
+    fontSize: 22,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+  },
   statsRow: {
     flexDirection: 'row',
     gap: 16,
@@ -175,6 +142,6 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.border,
   },
   stat: { flex: 1 },
-  statLabel: { color: COLORS.textDim, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
+  statLabel: { color: COLORS.textDim, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.8 },
   statValue: { fontSize: 20, fontWeight: '600', marginTop: 4 },
 });

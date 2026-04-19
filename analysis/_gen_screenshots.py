@@ -8,15 +8,11 @@ static screenshots match the reactive views. Run:
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-BACKEND_DIR = REPO_ROOT / "backend"
-ECON_DIR = BACKEND_DIR / "econ"
-for _p in (BACKEND_DIR, ECON_DIR):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
+from common import BACKEND_DIR, ensure_backend_paths, load_zenpower_analysis_frame, residential_subset
+
+ensure_backend_paths()
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,20 +20,10 @@ import pandas as pd
 
 OUT = Path(__file__).resolve().parent / "screenshots"
 OUT.mkdir(parents=True, exist_ok=True)
-CSV = BACKEND_DIR / "data" / "zenpower_permits.csv"
 
 # --- Load ------------------------------------------------------------------
-raw = pd.read_csv(
-    CSV,
-    usecols=["kilowatt_value", "issue_date", "apply_date", "state",
-             "postal_code", "is_system_size_estimation"],
-    dtype={"postal_code": "string"},
-)
-raw["postal_code"] = raw["postal_code"].str.zfill(5)
-raw["issue_date"] = pd.to_datetime(raw["issue_date"], errors="coerce", utc=True)
-raw["apply_date"] = pd.to_datetime(raw["apply_date"], errors="coerce", utc=True)
-raw["permit_days"] = (raw["issue_date"] - raw["apply_date"]).dt.total_seconds() / 86400.0
-residential = raw[(raw["kilowatt_value"] >= 2) & (raw["kilowatt_value"] <= 25)].copy()
+raw = load_zenpower_analysis_frame()
+residential = residential_subset(raw)
 
 # --- 1. System size distribution ------------------------------------------
 fig, ax = plt.subplots(figsize=(9, 3.5))
@@ -56,7 +42,7 @@ plt.close(fig)
 
 # --- 2. NEM 3.0 monthly install trend -------------------------------------
 ca = residential[residential["state"] == "CA"].dropna(subset=["issue_date"]).copy()
-ca["ym"] = ca["issue_date"].dt.to_period("M").dt.to_timestamp()
+ca["ym"] = ca["issue_date"].dt.tz_localize(None).dt.to_period("M").dt.to_timestamp()
 monthly = ca.groupby("ym").agg(
     installs=("kilowatt_value", "size"),
     total_kw=("kilowatt_value", "sum"),
@@ -86,7 +72,7 @@ plt.close(fig)
 # --- 3. Permit velocity ----------------------------------------------------
 valid = residential.dropna(subset=["permit_days", "issue_date"]).copy()
 valid = valid[(valid["permit_days"] >= 0) & (valid["permit_days"] <= 365)]
-valid["ym"] = valid["issue_date"].dt.to_period("M").dt.to_timestamp()
+valid["ym"] = valid["issue_date"].dt.tz_localize(None).dt.to_period("M").dt.to_timestamp()
 monthly_med = valid.groupby("ym").agg(
     median_days=("permit_days", "median"),
     n=("permit_days", "size"),

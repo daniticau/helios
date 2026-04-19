@@ -310,8 +310,8 @@ def test_gather_for_live_fetches_caiso_when_available() -> None:
     """When the CAISO endpoint returns a valid zipped CSV, the
     orchestrator should expose ``caiso_lmp_24h`` in the result.
     """
-    from tests.test_caiso import _build_oasis_zip
     from config import settings as _settings
+    from tests.test_caiso import _build_oasis_zip
 
     _settings.orthogonal_api_key = "orth_test"
 

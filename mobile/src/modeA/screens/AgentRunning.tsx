@@ -106,8 +106,7 @@ export function AgentRunning({ navigation }: ModeAScreenProps<'AgentRunning'>) {
 
       <View style={styles.body}>
         <Animated.View entering={FadeInUp.duration(480)}>
-          <Text style={styles.running}>running</Text>
-          <SubtitleCycler running={mut.isPending} finalLine="fan-out complete — settling" />
+          <SubtitleCycler running={mut.isPending} finalLine="fan-out complete, settling" />
         </Animated.View>
 
         <Animated.View entering={FadeIn.delay(120).duration(520)} style={styles.tickerHolder}>
@@ -123,24 +122,8 @@ export function AgentRunning({ navigation }: ModeAScreenProps<'AgentRunning'>) {
             <PrimaryButton label="retry" onPress={retry} variant="secondary" />
           </Animated.View>
         )}
-
-        {!mut.isError && <ExplainerFooter />}
       </View>
     </SafeAreaView>
-  );
-}
-
-function ExplainerFooter() {
-  return (
-    <View style={styles.explainer}>
-      <Text style={styles.explainerLead}>why ten APIs at once?</Text>
-      <Text style={styles.explainerBody}>
-        Home solar ROI needs tariff, weather, installer pricing, financing,
-        rebate news, property value, demographics, local reviews, carbon pricing,
-        and permit data. Orthogonal fans out in parallel — one SDK integration
-        instead of ten developer signups.
-      </Text>
-    </View>
   );
 }
 
@@ -237,8 +220,8 @@ const styles = StyleSheet.create({
   },
   brand: {
     color: colors.accent,
-    fontSize: fontSizes.xs,
-    letterSpacing: 2,
+    fontSize: 12,
+    letterSpacing: 1.2,
     fontFamily: mono,
     textTransform: 'uppercase',
   },
@@ -263,14 +246,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     gap: spacing.lg,
-  },
-  running: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    letterSpacing: 3,
-    textTransform: 'uppercase',
-    fontFamily: mono,
-    marginBottom: spacing.xs,
   },
   subtitleRow: {
     flexDirection: 'row',
@@ -313,24 +288,5 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: fontSizes.sm,
     fontFamily: mono,
-  },
-  explainer: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    gap: spacing.xs,
-  },
-  explainerLead: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    fontFamily: mono,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
-  explainerBody: {
-    color: colors.textMuted,
-    fontSize: fontSizes.sm,
-    lineHeight: 20,
   },
 });

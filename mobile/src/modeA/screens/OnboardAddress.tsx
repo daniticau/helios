@@ -60,9 +60,9 @@ export function OnboardAddress({ navigation }: ModeAScreenProps<'OnboardAddress'
               Where are we running the numbers?
             </Text>
             <Text style={styles.subhead}>
-              Address tells us your utility, irradiance, permit velocity, and local
-              installer pricing. All ten lookups fan out in parallel — tap continue
-              to see it happen.
+              Address resolves to your utility, irradiance, permit velocity, and
+              local installer pricing. All ten lookups fan out in parallel. Tap
+              continue to see it.
             </Text>
           </View>
 
@@ -115,13 +115,14 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontSize: fontSizes.md,
     fontWeight: '700',
-    letterSpacing: 4,
+    letterSpacing: 2,
     textTransform: 'lowercase',
   },
   step: {
     color: colors.textDim,
-    fontSize: fontSizes.xs,
-    letterSpacing: 2,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
     fontFamily: mono,
     marginTop: spacing.sm,
   },
@@ -143,8 +144,8 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    letterSpacing: 2,
+    fontSize: 12,
+    letterSpacing: 1.2,
     fontFamily: mono,
     textTransform: 'uppercase',
   },

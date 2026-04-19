@@ -20,14 +20,19 @@ class Tariff:
     export_by_hour: list[float]
 
 
-def _build_retail(peak_usd: float, partial_usd: float, offpeak_usd: float,
-                   peak_hours: range, partial_hours: list[int] | None = None) -> list[float]:
-    partial_hours = partial_hours or []
+def _build_retail(
+    peak_usd: float,
+    partial_usd: float,
+    offpeak_usd: float,
+    peak_hours: range,
+    partial_hours: list[int] | None = None,
+) -> list[float]:
+    partial_hour_set = set(partial_hours or [])
     out = []
     for h in range(24):
         if h in peak_hours:
             out.append(peak_usd)
-        elif h in partial_hours:
+        elif h in partial_hour_set:
             out.append(partial_usd)
         else:
             out.append(offpeak_usd)
@@ -82,17 +87,18 @@ TARIFFS: dict[str, Tariff] = {
     ),
 }
 
+_DEFAULT_TARIFF_BY_UTILITY: dict[str, Tariff] = {}
+for tariff in TARIFFS.values():
+    _DEFAULT_TARIFF_BY_UTILITY.setdefault(tariff.utility, tariff)
+
 
 def resolve_tariff(utility: str, plan: str | None = None) -> Tariff:
     if plan:
         key = f"{utility}/{plan}"
-        if key in TARIFFS:
-            return TARIFFS[key]
-    # fallback: first tariff matching the utility
-    for k, t in TARIFFS.items():
-        if k.startswith(utility + "/"):
-            return t
-    return TARIFFS["PGE/EV2-A"]
+        tariff = TARIFFS.get(key)
+        if tariff is not None:
+            return tariff
+    return _DEFAULT_TARIFF_BY_UTILITY.get(utility, TARIFFS["PGE/EV2-A"])
 
 
 def tou_weighted_retail(utility: str, plan: str | None = None) -> float:

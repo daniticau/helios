@@ -123,7 +123,7 @@ def test_typical_la_jolla_sdge_profile_positive_npv():
     roi = compute_roi(profile=profile, system=system, external={"calls": []})
     assert roi.npv_25yr_usd > 0, f"expected positive NPV, got {roi.npv_25yr_usd}"
     assert 3.0 < roi.payback_years < 15.0, (
-        f"payback should land in the 3–15yr band for a typical CA household, "
+        f"payback should land in the 3-15yr band for a typical CA household, "
         f"got {roi.payback_years}"
     )
 

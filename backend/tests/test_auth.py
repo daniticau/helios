@@ -7,7 +7,8 @@ the JWKS endpoint is mocked with respx.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
@@ -105,10 +106,9 @@ def test_empty_supabase_url_always_returns_none(
     generate_jwt: Callable[..., str],
     mock_jwks_server: dict[str, Any],
 ) -> None:
-    from config import settings as _settings
-
     import auth
     from auth import get_optional_user
+    from config import settings as _settings
 
     # Pretend auth is not configured.
     monkeypatch.setattr(_settings, "supabase_url", "")
@@ -127,7 +127,7 @@ def test_jwks_fetch_error_returns_none(
 
     from auth import get_optional_user
 
-    def _boom(self):  # noqa: ANN001
+    def _boom(self):
         raise _jwt.PyJWKClientError("boom — jwks unreachable")
 
     monkeypatch.setattr(_jwt.PyJWKClient, "fetch_data", _boom)

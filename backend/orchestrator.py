@@ -39,8 +39,9 @@ import asyncio
 import json
 import re
 import time
-from datetime import datetime, timedelta, timezone
-from typing import Any, TypedDict
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime, timedelta
+from typing import Any, TypedDict, cast
 
 from cache import cache
 from caiso import fetch_lmp_24h_real, synth_lmp_24h
@@ -82,6 +83,9 @@ CACHE_TTL = {
     "caiso_lmp": 600,  # 10 min — LMPs refresh every ~5min
 }
 
+SourceResult = tuple[dict[str, Any], OrthogonalCallLog]
+SourceSpec = tuple[str, Awaitable[SourceResult]]
+
 
 # --- Helpers ---------------------------------------------------------------
 
@@ -98,13 +102,54 @@ def _state_from_profile(profile: UserProfile) -> str:
     return m.group(1) if m else "CA"
 
 
+def _elapsed_ms(start: float, *, minimum: int = 0) -> int:
+    return max(minimum, int((time.perf_counter() - start) * 1000))
+
+
+def _error_result(api_label: str, purpose: str, start: float, message: str) -> SourceResult:
+    return {}, OrthogonalCallLog(
+        api=api_label,
+        purpose=purpose,
+        latency_ms=_elapsed_ms(start),
+        status="error",
+        error_message=message[:300],
+    )
+
+
+def _fatal_call_log(key: str, error: Exception) -> OrthogonalCallLog:
+    return OrthogonalCallLog(
+        api=key,
+        purpose=f"(fatal) {key}",
+        latency_ms=0,
+        status="error",
+        error_message=f"{type(error).__name__}: {error}"[:300],
+    )
+
+
+async def _gather_sources(sources: list[SourceSpec]) -> ExternalInputs:
+    results = await asyncio.gather(*(task for _, task in sources), return_exceptions=True)
+
+    payloads: dict[str, Any] = {}
+    call_logs: list[OrthogonalCallLog] = []
+    for (key, _), result in zip(sources, results, strict=True):
+        if isinstance(result, Exception):
+            call_logs.append(_fatal_call_log(key, result))
+            continue
+        payload, log = result
+        payloads[key] = payload
+        call_logs.append(log)
+
+    payloads["calls"] = call_logs
+    return cast(ExternalInputs, payloads)
+
+
 async def _timed_call(
     api_label: str,
     purpose: str,
     cache_key: str | None,
     ttl_seconds: int,
-    coro_factory,
-) -> tuple[dict, OrthogonalCallLog]:
+    coro_factory: Callable[[], Awaitable[dict[str, Any]]],
+) -> SourceResult:
     """Wrap a per-source coroutine with timing, caching, and error capture.
 
     Args:
@@ -126,7 +171,7 @@ async def _timed_call(
         if hit is not None:
             start = time.perf_counter()
             elapsed_ms = max(1, int((time.perf_counter() - start) * 1000))
-            return hit, OrthogonalCallLog(
+            return cast(dict[str, Any], hit), OrthogonalCallLog(
                 api=api_label,
                 purpose=purpose,
                 latency_ms=elapsed_ms,
@@ -139,7 +184,7 @@ async def _timed_call(
             coro_factory(),
             timeout=settings.orthogonal_timeout_seconds,
         )
-        elapsed_ms = int((time.perf_counter() - start) * 1000)
+        elapsed_ms = _elapsed_ms(start)
         if settings.cache_enabled and cache_key:
             cache.set(cache_key, payload, ttl_seconds)
         return payload, OrthogonalCallLog(
@@ -148,33 +193,17 @@ async def _timed_call(
             latency_ms=elapsed_ms,
             status="success",
         )
-    except asyncio.TimeoutError:
-        elapsed_ms = int((time.perf_counter() - start) * 1000)
-        return {}, OrthogonalCallLog(
-            api=api_label,
-            purpose=purpose,
-            latency_ms=elapsed_ms,
-            status="error",
-            error_message=f"timeout after {settings.orthogonal_timeout_seconds}s",
+    except TimeoutError:
+        return _error_result(
+            api_label,
+            purpose,
+            start,
+            f"timeout after {settings.orthogonal_timeout_seconds}s",
         )
     except OrthogonalError as e:
-        elapsed_ms = int((time.perf_counter() - start) * 1000)
-        return {}, OrthogonalCallLog(
-            api=api_label,
-            purpose=purpose,
-            latency_ms=elapsed_ms,
-            status="error",
-            error_message=str(e)[:300],
-        )
-    except Exception as e:  # noqa: BLE001
-        elapsed_ms = int((time.perf_counter() - start) * 1000)
-        return {}, OrthogonalCallLog(
-            api=api_label,
-            purpose=purpose,
-            latency_ms=elapsed_ms,
-            status="error",
-            error_message=f"{type(e).__name__}: {e}"[:300],
-        )
+        return _error_result(api_label, purpose, start, str(e))
+    except Exception as e:
+        return _error_result(api_label, purpose, start, f"{type(e).__name__}: {e}")
 
 
 # --- Per-source adapters ---------------------------------------------------
@@ -195,7 +224,7 @@ async def fetch_weather(lat: float, lng: float) -> tuple[dict, OrthogonalCallLog
     a "ran at night UTC" zero-irradiance bug). We then take the most
     recent complete solar day from the series.
     """
-    now = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    now = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     start_dt = now - timedelta(days=1)
     end_dt = now + timedelta(days=1)
     start = start_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -725,7 +754,7 @@ async def fetch_zenpower_summary(
         }
         status = "success"
         err = None
-    elapsed_ms = max(1, int((time.perf_counter() - start) * 1000))
+    elapsed_ms = _elapsed_ms(start, minimum=1)
     return payload, OrthogonalCallLog(
         api="ZenPower (local CSV)",
         purpose="Per-ZIP permit summary",
@@ -749,51 +778,20 @@ async def gather_for_roi(
     zip_code = _extract_zip(profile.address)
     state = _state_from_profile(profile)
 
-    tasks = [
-        fetch_tariff(profile),
-        fetch_weather(profile.lat, profile.lng),
-        fetch_installer_pricing(zip_code),
-        fetch_financing(state),
-        fetch_news(state),
-        fetch_property_value(profile.address, zip_code),
-        fetch_demographics(zip_code, profile.utility),
-        fetch_installer_reviews(zip_code),
-        fetch_carbon_price(state),
-        fetch_zenpower_summary(zip_code, zenpower),
-    ]
-    keys = [
-        "tariff",
-        "weather",
-        "installer_pricing",
-        "financing",
-        "news",
-        "property_value",
-        "demographics",
-        "reviews",
-        "carbon_price",
-        "zenpower",
-    ]
-
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    out: ExternalInputs = {"calls": []}
-    for k, r in zip(keys, results, strict=True):
-        if isinstance(r, Exception):
-            out["calls"].append(
-                OrthogonalCallLog(
-                    api=k,
-                    purpose=f"(fatal) {k}",
-                    latency_ms=0,
-                    status="error",
-                    error_message=f"{type(r).__name__}: {r}"[:300],
-                )
-            )
-            continue
-        payload, log = r
-        out[k] = payload  # type: ignore[literal-required]
-        out["calls"].append(log)
-
-    return out
+    return await _gather_sources(
+        [
+            ("tariff", fetch_tariff(profile)),
+            ("weather", fetch_weather(profile.lat, profile.lng)),
+            ("installer_pricing", fetch_installer_pricing(zip_code)),
+            ("financing", fetch_financing(state)),
+            ("news", fetch_news(state)),
+            ("property_value", fetch_property_value(profile.address, zip_code)),
+            ("demographics", fetch_demographics(zip_code, profile.utility)),
+            ("reviews", fetch_installer_reviews(zip_code)),
+            ("carbon_price", fetch_carbon_price(state)),
+            ("zenpower", fetch_zenpower_summary(zip_code, zenpower)),
+        ]
+    )
 
 
 async def gather_for_live(profile: UserProfile) -> ExternalInputs:
@@ -804,30 +802,13 @@ async def gather_for_live(profile: UserProfile) -> ExternalInputs:
     curve (see TODO in ``econ/arbitrage.py`` — WS2 can consume this if
     available, else falls back to ``caiso.synth_lmp_24h``).
     """
-    tasks = [
-        fetch_weather(profile.lat, profile.lng),
-        fetch_caiso_lmp(),
-        fetch_news(_state_from_profile(profile)),
-    ]
-    keys = ["weather", "caiso_lmp", "news"]
-
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    out: ExternalInputs = {"calls": []}
-    for k, r in zip(keys, results, strict=True):
-        if isinstance(r, Exception):
-            out["calls"].append(
-                OrthogonalCallLog(
-                    api=k,
-                    purpose=f"(fatal) {k}",
-                    latency_ms=0,
-                    status="error",
-                    error_message=f"{type(r).__name__}: {r}"[:300],
-                )
-            )
-            continue
-        payload, log = r
-        out[k] = payload  # type: ignore[literal-required]
-        out["calls"].append(log)
+    out = await _gather_sources(
+        [
+            ("weather", fetch_weather(profile.lat, profile.lng)),
+            ("caiso_lmp", fetch_caiso_lmp()),
+            ("news", fetch_news(_state_from_profile(profile))),
+        ]
+    )
 
     # Promote the LMP series to a flat list so downstream consumers don't
     # have to unwrap the Orthogonal/CAISO envelope.

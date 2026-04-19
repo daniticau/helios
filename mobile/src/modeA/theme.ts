@@ -1,7 +1,7 @@
 // Design tokens for Mode A — dark theme. See user global prefs:
 // bg is dark gray (#1a1a1a), not pure black. Monospace for agent output.
 
-import { Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 export const colors = {
   bg: '#1a1a1a',
@@ -57,4 +57,37 @@ export const mono = Platform.select({
   ios: 'Menlo',
   android: 'monospace',
   default: 'Menlo',
+});
+
+// Shared label primitives. Replace ad-hoc eyebrows with these.
+export const textStyles = StyleSheet.create({
+  eyebrow: {
+    color: colors.textMuted,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    fontFamily: mono,
+    fontWeight: '500',
+  },
+  eyebrowAccent: {
+    color: colors.accent,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    fontFamily: mono,
+    fontWeight: '500',
+  },
+  eyebrowDim: {
+    color: colors.textDim,
+    fontSize: 11.5,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    fontFamily: mono,
+  },
+  sectionLabel: {
+    color: colors.textMuted,
+    fontSize: 13,
+    letterSpacing: 0.4,
+    fontWeight: '500',
+  },
 });

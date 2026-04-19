@@ -40,8 +40,8 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    letterSpacing: 2,
+    fontSize: 12,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
     fontFamily: mono,
     marginBottom: spacing.sm,
@@ -64,10 +64,10 @@ const styles = StyleSheet.create({
   },
   unit: {
     color: colors.textMuted,
-    fontSize: fontSizes.xs,
+    fontSize: 12,
     marginTop: 2,
     fontFamily: mono,
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
   plus: {
     paddingHorizontal: spacing.sm,

@@ -21,13 +21,14 @@ from schemas import ROIRequest, ROIResult
 
 logger = logging.getLogger("helios.routes.roi")
 router = APIRouter()
+optional_user_dep = Depends(get_optional_user)
 
 
 @router.post("/roi", response_model=ROIResult)
 async def post_roi(
     req: ROIRequest,
     request: Request,
-    user: User | None = Depends(get_optional_user),
+    user: User | None = optional_user_dep,
 ) -> ROIResult:
     profile = req.profile
     system = req.proposed_system or recommend_system_size(profile.monthly_kwh)

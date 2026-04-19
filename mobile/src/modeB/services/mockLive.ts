@@ -48,7 +48,7 @@ function pickAction(h: number, soc: number): { action: LiveAction; gain: number;
     return {
       action: 'DISCHARGE_BATTERY_TO_GRID',
       gain: 1.42,
-      reason: `Peak export rate $${exp.toFixed(2)}/kWh. Battery at ${soc.toFixed(0)}% — selling is worth ${(exp / retail).toFixed(1)}x more than holding.`,
+      reason: `Peak export rate $${exp.toFixed(2)}/kWh. Battery at ${soc.toFixed(0)}%. Selling is worth ${(exp / retail).toFixed(1)}x more than holding.`,
     };
   }
 

@@ -19,9 +19,9 @@ from __future__ import annotations
 import json
 import sys
 import time
-from datetime import datetime, timedelta, timezone
+from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Any, Callable, Iterator
+from typing import Any
 
 import httpx
 import jwt
@@ -240,7 +240,7 @@ def mock_jwks_server(
     """
     jwks_body = {"keys": [ec_keypair["jwk"], rsa_keypair["jwk"]]}
 
-    def _fake_fetch(self):  # noqa: ANN001
+    def _fake_fetch(self):
         # Honour the PyJWKClient cache contract the real method does.
         if getattr(self, "jwk_set_cache", None) is not None:
             self.jwk_set_cache.put(jwks_body)
@@ -286,7 +286,6 @@ def mock_orthogonal(
         except json.JSONDecodeError:
             payload = {}
         api = payload.get("api")
-        path = payload.get("path", "")
         body = payload.get("body") or {}
 
         if api == "precip":
@@ -441,14 +440,14 @@ def minimal_pdf() -> bytes:
 
 
 __all__ = [
-    "TEST_SUPABASE_URL",
     "TEST_AUDIENCE",
+    "TEST_SUPABASE_URL",
     "ec_keypair",
     "generate_jwt",
     "make_minimal_pdf_bytes",
+    "minimal_pdf",
     "mock_jwks_server",
     "mock_orthogonal",
-    "minimal_pdf",
     "rsa_keypair",
     "test_client",
 ]

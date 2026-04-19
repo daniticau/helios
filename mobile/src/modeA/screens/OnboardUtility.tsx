@@ -89,8 +89,8 @@ export function OnboardUtility({ navigation }: ModeAScreenProps<'OnboardUtility'
             <Text style={styles.step}>STEP 2 OF 2</Text>
             <Text style={styles.headline}>Your utility + last bill</Text>
             <Text style={styles.subhead}>
-              We match you to a TOU plan and anchor the year-1 savings on your
-              actual usage. Thirty seconds of typing unlocks the full fan-out.
+              We match you to a time-of-use plan, then anchor year-one savings on
+              your real usage.
             </Text>
           </View>
 
@@ -157,7 +157,7 @@ export function OnboardUtility({ navigation }: ModeAScreenProps<'OnboardUtility'
               <Text style={styles.suffix}>kWh</Text>
             </View>
             <Text style={styles.hint}>
-              Rough estimate is fine — we extrapolate from monthly on the backend.
+              A rough number is fine. We extrapolate from monthly on the backend.
             </Text>
           </View>
         </ScrollView>
@@ -188,8 +188,9 @@ const styles = StyleSheet.create({
   },
   step: {
     color: colors.textDim,
-    fontSize: fontSizes.xs,
-    letterSpacing: 2,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
     fontFamily: mono,
   },
   headline: {
@@ -208,8 +209,8 @@ const styles = StyleSheet.create({
   block: { gap: spacing.xs },
   label: {
     color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    letterSpacing: 2,
+    fontSize: 12,
+    letterSpacing: 1.2,
     fontFamily: mono,
     textTransform: 'uppercase',
   },
@@ -268,7 +269,8 @@ const styles = StyleSheet.create({
   },
   hint: {
     color: colors.textDim,
-    fontSize: fontSizes.xs,
+    fontSize: 12,
+    lineHeight: 18,
     marginTop: 4,
   },
   footer: {

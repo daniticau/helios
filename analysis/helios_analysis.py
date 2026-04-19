@@ -29,21 +29,14 @@ def _setup():
     imports the arbitrage module, which imports `caiso.httpx` -- and we
     don't want the analysis env to depend on httpx.
     """
-    import sys
-    from pathlib import Path
+    from common import BACKEND_DIR, CSV_PATH, ECON_DIR, REPO_ROOT, ensure_backend_paths
 
-    REPO_ROOT = Path(__file__).resolve().parent.parent
-    BACKEND_DIR = REPO_ROOT / "backend"
-    ECON_DIR = BACKEND_DIR / "econ"
-    for _p in (BACKEND_DIR, ECON_DIR):
-        if str(_p) not in sys.path:
-            sys.path.insert(0, str(_p))
+    ensure_backend_paths()
 
     import matplotlib.pyplot as plt
     import numpy as np
     import pandas as pd
 
-    CSV_PATH = BACKEND_DIR / "data" / "zenpower_permits.csv"
     return BACKEND_DIR, CSV_PATH, ECON_DIR, REPO_ROOT, np, pd, plt
 
 
@@ -84,30 +77,15 @@ def _intro(mo):
 @app.cell
 def _load(CSV_PATH, pd):
     """Load + tidy. Keep the dtype recipe aligned with backend/zenpower.py."""
-    raw = pd.read_csv(
-        CSV_PATH,
-        usecols=[
-            "kilowatt_value",
-            "issue_date",
-            "apply_date",
-            "city",
-            "state",
-            "postal_code",
-            "is_system_size_estimation",
-            "is_active",
-        ],
-        dtype={"postal_code": "string"},
-    )
-    raw["postal_code"] = raw["postal_code"].str.zfill(5)
-    raw["issue_date"] = pd.to_datetime(raw["issue_date"], errors="coerce", utc=True)
-    raw["apply_date"] = pd.to_datetime(raw["apply_date"], errors="coerce", utc=True)
-    raw["permit_days"] = (raw["issue_date"] - raw["apply_date"]).dt.total_seconds() / 86400.0
+    from common import load_zenpower_analysis_frame, residential_subset
+
+    raw = load_zenpower_analysis_frame(CSV_PATH)
     raw["issue_year"] = raw["issue_date"].dt.year
-    raw["issue_month"] = raw["issue_date"].dt.to_period("M").astype(str)
+    raw["issue_month"] = raw["issue_date"].dt.tz_localize(None).dt.to_period("M").astype(str)
 
     # Residential cut: 2-25 kW covers virtually all SFR rooftop systems
     # and drops the commercial/multi-family tail that distorts averages.
-    residential = raw[(raw["kilowatt_value"] >= 2) & (raw["kilowatt_value"] <= 25)].copy()
+    residential = residential_subset(raw)
     return raw, residential
 
 
@@ -133,7 +111,7 @@ def _summary_stats(mo, raw, residential):
     _date_lo = raw["issue_date"].min()
     _date_hi = raw["issue_date"].max()
     _ca_frac = (raw["state"] == "CA").mean() * 100
-    _est_frac = (raw["is_system_size_estimation"] == True).mean() * 100  # noqa: E712
+    _est_frac = raw["is_system_size_estimation"].eq(True).mean() * 100
 
     mo.md(
         f"""
@@ -242,9 +220,10 @@ def _top_zips(plt, residential):
     )
     _fig, _ax = plt.subplots(figsize=(9, 5))
     _ax.barh(_top.index[::-1], _top["installs"].values[::-1])
-    for _i, (_, _row) in enumerate(_top.iloc[::-1].iterrows()):
-        _ax.text(_row["installs"] + 10, _i, f"{_row['mean_kw']:.1f} kW avg",
-                 va="center", fontsize=8)
+    for _i, (_installs, _mean_kw) in enumerate(
+        zip(_top["installs"].iloc[::-1], _top["mean_kw"].iloc[::-1], strict=True)
+    ):
+        _ax.text(_installs + 10, _i, f"{_mean_kw:.1f} kW avg", va="center", fontsize=8)
     _ax.set_xlabel("Permit count")
     _ax.set_title("Top 20 ZIPs by residential install count (with mean system size)")
     _fig.tight_layout()
@@ -317,7 +296,9 @@ def _velocity(pd, plt, residential):
     # before apply), and the long tail past a year is mostly commercial
     # rolls that slipped into the residential kW band.
     _valid = _valid[(_valid["permit_days"] >= 0) & (_valid["permit_days"] <= 365)]
-    _valid["issue_year_month"] = _valid["issue_date"].dt.to_period("M").dt.to_timestamp()
+    _valid["issue_year_month"] = (
+        _valid["issue_date"].dt.tz_localize(None).dt.to_period("M").dt.to_timestamp()
+    )
 
     monthly_med = (
         _valid.groupby("issue_year_month")
@@ -392,7 +373,7 @@ def _s4_header(mo):
 @app.cell
 def _trends(mo, pd, plt, residential):
     _ca = residential[residential["state"] == "CA"].dropna(subset=["issue_date"]).copy()
-    _ca["ym"] = _ca["issue_date"].dt.to_period("M").dt.to_timestamp()
+    _ca["ym"] = _ca["issue_date"].dt.tz_localize(None).dt.to_period("M").dt.to_timestamp()
 
     _monthly = (
         _ca.groupby("ym")

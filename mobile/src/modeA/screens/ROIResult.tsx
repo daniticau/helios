@@ -29,20 +29,12 @@ export function ROIResult({ route, navigation }: ModeAScreenProps<'ROIResult'>) 
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInUp.duration(420)}>
-          <View style={styles.headerRow}>
-            <Text style={styles.brand}>helios · mode a</Text>
-            <View style={styles.settledPill}>
-              <View style={styles.settledDot} />
-              <Text style={styles.settledText}>settled</Text>
-            </View>
-          </View>
+          <NPVHeroCard
+            paybackYears={result.payback_years}
+            npv25yrUsd={result.npv_25yr_usd}
+            annualSavingsYr1={result.annual_savings_yr1_usd}
+          />
         </Animated.View>
-
-        <NPVHeroCard
-          paybackYears={result.payback_years}
-          npv25yrUsd={result.npv_25yr_usd}
-          annualSavingsYr1={result.annual_savings_yr1_usd}
-        />
 
         <Animated.View entering={FadeInUp.delay(120).duration(420)}>
           <SystemSizeCard system={result.recommended_system} />
@@ -78,9 +70,6 @@ export function ROIResult({ route, navigation }: ModeAScreenProps<'ROIResult'>) 
 
         <Animated.View entering={FadeInUp.delay(300).duration(420)} style={styles.recapBlock}>
           <Text style={styles.recapHeader}>what we looked up</Text>
-          <Text style={styles.recapSub}>
-            {result.orthogonal_calls_made.length} Orthogonal APIs fanned out in parallel
-          </Text>
           <View style={styles.recapTicker}>
             <OrthogonalTicker
               calls={result.orthogonal_calls_made}
@@ -111,42 +100,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     gap: spacing.md,
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  brand: {
-    color: colors.accent,
-    fontSize: fontSizes.xs,
-    letterSpacing: 3,
-    fontFamily: mono,
-    textTransform: 'uppercase',
-  },
-  settledPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: 999,
-    backgroundColor: colors.bgElevated,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  settledDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.success,
-  },
-  settledText: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    fontFamily: mono,
-    letterSpacing: 1,
-  },
   tariffCard: {
     backgroundColor: colors.card,
     borderRadius: radius.md,
@@ -157,10 +110,9 @@ const styles = StyleSheet.create({
   },
   tariffLabel: {
     color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    letterSpacing: 2,
-    fontFamily: mono,
-    textTransform: 'uppercase',
+    fontSize: 13,
+    letterSpacing: 0.4,
+    fontWeight: '500',
   },
   tariffText: {
     color: colors.text,
@@ -174,15 +126,10 @@ const styles = StyleSheet.create({
   },
   recapHeader: {
     color: colors.textMuted,
-    fontSize: fontSizes.xs,
+    fontSize: 12,
     fontFamily: mono,
-    letterSpacing: 2,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
-  },
-  recapSub: {
-    color: colors.textDim,
-    fontSize: fontSizes.xs,
-    fontFamily: mono,
     marginBottom: spacing.xs,
   },
   recapTicker: {

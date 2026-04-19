@@ -35,7 +35,7 @@ export function NPVHeroCard({
         <Text style={styles.npvLabel}>25-year net present value</Text>
         <Text style={styles.npvValue}>{formatUsd(npv25yrUsd)}</Text>
         <Text style={styles.annualSavings}>
-          ≈ {formatUsd(annualSavingsYr1)}/yr in year 1 savings
+          about {formatUsd(annualSavingsYr1)}/yr in year-one savings
         </Text>
       </View>
     </Animated.View>
@@ -54,8 +54,8 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    letterSpacing: 2,
+    fontSize: 12,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
     fontFamily: mono,
   },
@@ -88,8 +88,8 @@ const styles = StyleSheet.create({
   },
   npvLabel: {
     color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    letterSpacing: 2,
+    fontSize: 12,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
     fontFamily: mono,
   },

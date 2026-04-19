@@ -15,7 +15,7 @@ from __future__ import annotations
 import io
 import math
 import zipfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import httpx
 
@@ -42,7 +42,7 @@ async def fetch_lmp_24h_real(
     Docs (best available):
     https://www.caiso.com/Documents/OASIS-InterfaceSpecification_v5_1_8Clean_Fall2017Release.pdf
     """
-    now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+    now = datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
     end = now + timedelta(hours=25)
     params = {
         "queryname": "PRC_LMP",

@@ -389,15 +389,6 @@ export function OrthogonalTicker({
           />
         ))}
       </div>
-      <div
-        className="flex items-center justify-between border-t border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/40 px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-[color:var(--color-text-dim)]"
-        style={{ fontFamily: 'var(--font-mono)' }}
-      >
-        <span>$ helios fanout --live</span>
-        <span>
-          <span className="text-[color:var(--color-accent)]">·</span> streaming real latencies
-        </span>
-      </div>
     </div>
   );
 }

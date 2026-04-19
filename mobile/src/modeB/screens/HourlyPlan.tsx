@@ -1,6 +1,6 @@
-// Hour-by-hour plan for the next 24 hours. Each row shows retail rate,
+// Hour-by-hour plan for the next 24 hours. Each card shows retail rate,
 // export rate, recommended action, and solar forecast for that hour.
-// Peak export windows are highlighted.
+// Peak export windows are tinted with the accent overlay.
 
 import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -15,9 +15,7 @@ interface Props {
 }
 
 // Derive a best-effort action for a future hour from retail/export rates +
-// solar. The backend's `recommend_action` is for "now"; we don't have a
-// full 24-hour plan on the wire yet, so we mirror the priority rules from
-// HELIOS.md §3.2 client-side.
+// solar. Mirrors the priority rules in HELIOS.md §3.2.
 function actionFor(p: ForecastPoint, isPeak: boolean): LiveAction {
   if (p.export_rate > 0.9 || isPeak) return 'DISCHARGE_BATTERY_TO_GRID';
   if (p.solar_kw_forecast > 2 && p.export_rate < 0.2) return 'CHARGE_BATTERY_FROM_SOLAR';
@@ -60,56 +58,53 @@ export function HourlyPlan({ onBack }: Props) {
       <View style={styles.header}>
         {onBack && (
           <Pressable onPress={onBack} hitSlop={16}>
-            <Text style={styles.back}>‹ Back</Text>
+            <Text style={styles.back}>Back</Text>
           </Pressable>
         )}
         <Text style={styles.title}>Next 24 hours</Text>
-        <Text style={styles.subtitle}>Hour-by-hour recommended action</Text>
+        <Text style={styles.subtitle}>Hour-by-hour guidance.</Text>
       </View>
 
       {!rec && <Text style={styles.loading}>Loading plan…</Text>}
 
       {rec && (
         <ScrollView contentContainerStyle={styles.body}>
-          <View style={styles.headerRow}>
-            <Text style={[styles.headerCell, { flex: 0.9 }]}>Hour</Text>
-            <Text style={[styles.headerCell, { flex: 1 }]}>Retail</Text>
-            <Text style={[styles.headerCell, { flex: 1 }]}>Export</Text>
-            <Text style={[styles.headerCell, { flex: 1 }]}>Solar</Text>
-            <Text style={[styles.headerCell, { flex: 1.8, textAlign: 'right' }]}>Action</Text>
-          </View>
           {rows.map(({ p, when, isPeak, action }) => {
             const meta = ACTION_META[action];
             return (
               <View
                 key={p.hour_offset}
-                style={[
-                  styles.row,
-                  isPeak && styles.rowPeak,
-                ]}
+                style={[styles.card, isPeak && styles.cardPeak]}
               >
-                <Text style={[styles.cell, { flex: 0.9, fontWeight: '600' }]}>
-                  {fmtHour(when)}
-                </Text>
-                <Text style={[styles.cell, { flex: 1 }]}>${p.retail_rate.toFixed(2)}</Text>
-                <Text
-                  style={[
-                    styles.cell,
-                    { flex: 1, color: p.export_rate > 0.8 ? COLORS.accent : COLORS.text },
-                  ]}
-                >
-                  ${p.export_rate.toFixed(2)}
-                </Text>
-                <Text style={[styles.cell, { flex: 1, color: COLORS.blue }]}>
-                  {p.solar_kw_forecast.toFixed(1)} kW
-                </Text>
-                <View style={[styles.actionCell, { flex: 1.8 }]}>
-                  <View style={[styles.actionDot, { backgroundColor: meta.color }]} />
+                <View style={styles.cardHead}>
+                  <Text style={styles.hour}>{fmtHour(when)}</Text>
+                  <View style={styles.actionCell}>
+                    <View style={[styles.actionDot, { backgroundColor: meta.color }]} />
+                    <Text
+                      style={[styles.actionText, { color: meta.color }]}
+                      numberOfLines={1}
+                    >
+                      {meta.verb}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.cardStats}>
+                  <Text style={styles.stat}>
+                    <Text style={styles.statLabel}>Retail </Text>
+                    <Text style={styles.statValue}>${p.retail_rate.toFixed(2)}</Text>
+                  </Text>
                   <Text
-                    style={[styles.actionText, { color: meta.color }]}
-                    numberOfLines={1}
+                    style={[
+                      styles.stat,
+                      { color: p.export_rate > 0.8 ? COLORS.accent : COLORS.text },
+                    ]}
                   >
-                    {meta.verb}
+                    <Text style={styles.statLabel}>Export </Text>
+                    <Text style={styles.statValue}>${p.export_rate.toFixed(2)}</Text>
+                  </Text>
+                  <Text style={[styles.stat, { color: COLORS.blue }]}>
+                    <Text style={styles.statLabel}>Solar </Text>
+                    <Text style={styles.statValue}>{p.solar_kw_forecast.toFixed(1)} kW</Text>
                   </Text>
                 </View>
               </View>
@@ -118,7 +113,7 @@ export function HourlyPlan({ onBack }: Props) {
 
           {rec.next_peak_window && (
             <Text style={styles.legend}>
-              Highlighted rows are the forecast peak export window (starts{' '}
+              Tinted cards are the forecast peak export window (starts{' '}
               {new Date(rec.next_peak_window.start_iso).toLocaleTimeString([], {
                 hour: 'numeric',
                 minute: '2-digit',
@@ -141,36 +136,61 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.border,
     borderBottomWidth: 1,
   },
-  back: { color: COLORS.accent, fontSize: 16, marginBottom: 8 },
-  title: { color: COLORS.text, fontSize: 24, fontWeight: '700' },
-  subtitle: { color: COLORS.textMuted, fontSize: 13, marginTop: 4 },
+  back: { color: COLORS.accent, fontSize: 15, marginBottom: 8 },
+  title: { color: COLORS.text, fontSize: 26, fontWeight: '700' },
+  subtitle: { color: COLORS.textMuted, fontSize: 14, marginTop: 4 },
   loading: { color: COLORS.textMuted, textAlign: 'center', padding: 40 },
-  body: { padding: 16, paddingBottom: 40 },
-  headerRow: {
-    flexDirection: 'row',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderBottomColor: COLORS.border,
-    borderBottomWidth: 1,
+  body: { padding: 16, paddingBottom: 40, gap: 8 },
+  card: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 14,
+    gap: 8,
   },
-  headerCell: {
-    color: COLORS.textDim,
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+  cardPeak: {
+    backgroundColor: COLORS.peak,
   },
-  row: {
+  cardHead: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderBottomColor: COLORS.border,
-    borderBottomWidth: 0.5,
+    justifyContent: 'space-between',
   },
-  rowPeak: { backgroundColor: COLORS.peak },
-  cell: { color: COLORS.text, fontSize: 14 },
-  actionCell: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'flex-end' },
+  hour: {
+    color: COLORS.text,
+    fontSize: 17,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+  },
+  actionCell: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   actionDot: { width: 8, height: 8, borderRadius: 4 },
-  actionText: { fontSize: 13, fontWeight: '600' },
-  legend: { color: COLORS.textDim, fontSize: 11, marginTop: 16, textAlign: 'center', lineHeight: 16 },
+  actionText: { fontSize: 14, fontWeight: '600' },
+  cardStats: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  stat: {
+    color: COLORS.text,
+    fontSize: 13,
+    fontFamily: 'Menlo',
+    fontVariant: ['tabular-nums'],
+  },
+  statLabel: {
+    color: COLORS.textDim,
+    fontFamily: 'Menlo',
+  },
+  statValue: {
+    fontWeight: '600',
+  },
+  legend: {
+    color: COLORS.textDim,
+    fontSize: 12,
+    marginTop: 16,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
 });

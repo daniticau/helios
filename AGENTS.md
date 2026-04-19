@@ -1,4 +1,4 @@
-# CLAUDE.md — Helios
+# AGENTS.md — Helios
 
 AI collaboration context for this repo. Read HELIOS.md for the product plan and math.
 

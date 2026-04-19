@@ -51,8 +51,8 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.textDim,
-    fontSize: fontSizes.xs,
-    letterSpacing: 1.5,
+    fontSize: 11.5,
+    letterSpacing: 1,
     fontFamily: mono,
     textTransform: 'uppercase',
   },

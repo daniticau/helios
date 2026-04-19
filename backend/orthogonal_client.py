@@ -23,6 +23,7 @@ concurrently through the same httpx connection pool.
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 import httpx
 
@@ -37,6 +38,14 @@ class OrthogonalError(RuntimeError):
 
 _client: httpx.AsyncClient | None = None
 _client_lock = asyncio.Lock()
+
+
+def _connection_limits() -> httpx.Limits:
+    parallelism = max(1, settings.orthogonal_parallelism)
+    return httpx.Limits(
+        max_connections=max(20, parallelism * 2),
+        max_keepalive_connections=max(10, parallelism),
+    )
 
 
 async def get_client() -> httpx.AsyncClient:
@@ -58,7 +67,7 @@ async def get_client() -> httpx.AsyncClient:
                         "Content-Type": "application/json",
                         "User-Agent": "helios-backend/0.1",
                     },
-                    limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+                    limits=_connection_limits(),
                 )
     return _client
 
@@ -70,7 +79,7 @@ async def run(
     body: dict | None = None,
     query: dict | None = None,
     timeout: float | None = None,
-) -> dict:
+) -> Any:
     """Invoke a single partner endpoint through Orthogonal's gateway.
 
     Args:
@@ -117,7 +126,9 @@ async def run(
             f"Orthogonal {api}{path} -> success=false: "
             f"{data.get('error') or data.get('code') or data}"
         )
-    return data.get("data") or {}
+    if "data" in data:
+        return data["data"]
+    return {}
 
 
 async def close() -> None:

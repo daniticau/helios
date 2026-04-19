@@ -17,9 +17,14 @@
 - **Dataset (one, for eligibility):** ZenPower solar permit records. Per-ZIP system size suggestion + a credibility line in the UI. Clears the "must use at least one dataset" requirement at minimum engineering cost.
 - Two mobile "wow" moments: the live Orthogonal orchestration ticker (8–10 APIs firing in parallel, real latencies) + iOS widget showing real-time arbitrage P&L.
 
-**Target prize — single focus:**
-**Best Use of Orthogonal — $1k + Meta Ray-Bans.** DataHacks lets a team win one prize total, so we stop optimizing for stacks and aim everything at Orthogonal. Tracks and the ZenPower dataset are scaffolding to make the Orthogonal win more credible. They are **not** independent targets.
-**Realistic ceiling: ~$1k + Meta Ray-Bans.**
+**Prize targets, in priority order:**
+1. **Best Use of Orthogonal — $1k + Meta Ray-Bans** (primary). The hero. Everything bends around the ticker.
+2. **Best Use of ZenPower dataset** (secondary). Real analysis in a committed Marimo notebook (`analysis/helios_analysis.py`) over 37.9k permits + a credibility line on the result card.
+3. **AWS challenge track** (tertiary). Backend deployed on App Runner from ECR; config at `infra/aws/apprunner.yaml`.
+4. **Marimo MLH sponsor prize** (tertiary). The same notebook imports `backend/econ/npv.py` live — reactive sliders over the NPV math, not a static report.
+
+DataHacks has historically awarded one prize per team, but multiple sponsor and dataset prizes can stack — so the video pitches all four, with Orthogonal as the opening and closing note.
+**Realistic ceiling: ~$1k + Meta Ray-Bans + one of ZenPower / AWS / Marimo.**
 
 ---
 
@@ -715,32 +720,7 @@ Checkpoint at hour 12: end-to-end wire-up for Mode A.
 
 ## 11. Demo Script (3 min)
 
-**00:00–00:15 — The hook**
-"Installing home solar has a 6–10 year payback in California. The math behind that number lives in 5 different places — your utility's time-of-use plan, current export rates under NEM 3.0, system sizing, installer quotes, financing APRs — and none of them talk to each other. So people don't install. Meanwhile, existing solar owners are leaving $40 a day on the table because they can't time their battery."
-
-**00:15–00:45 — Mode A, with the Orthogonal ticker as the hero**
-Open app. Enter a San Diego address. Tap go.
-Camera holds on the "Agent working" screen. The Orthogonal ticker runs live: tariff lookup… weather forecast… installer pricing… financing rates… rebate news… property value… demographics… installer reviews… carbon pricing… ZenPower permits. **Eight to ten APIs firing in parallel, real endpoints, real latencies, all streaming back in under 20 seconds.** The pacing is the point — rows pop in as each call resolves, latencies tick up live.
-Result lands: "Break even: 6.8 years. 25-year NPV: +$48,200. That's 11% of your home value. CO2 avoided: 12.4 tons — worth $2,100 at the current social cost of carbon."
-
-**00:45–01:00 — The Orthogonal value prop, on camera**
-Cut to the presenter. "Building this integration layer against ten paid APIs the normal way would take a week of signups, API key rotation, and billing dashboards — property data vendors, people data, review scrapers, a carbon price feed, financing lookups. We wrote **one SDK integration** instead of ten. Orthogonal is metered pay-per-use, no keys to manage, no billing to set up. This product genuinely didn't exist last quarter."
-
-**01:00–01:30 — The share extension**
-Quit app. Open a real PG&E bill PDF in Safari. Tap share. Helios appears in the sheet. Tap it. App opens, bill is auto-parsed, address pre-filled, ROI recomputes in 20 seconds — and the ticker runs again. "This is an actual iOS share extension, not a mock."
-
-**01:30–02:30 — Mode B**
-Switch to a pre-configured "existing owner" profile in Tijuana hills with an 8kW system and Powerwall.
-Show the live dashboard. Action card says "Charge battery — peak window opens in 42 minutes."
-Show the home screen (or widget preview): "Sell Now: +$1.42/hr" with a green dot.
-A push notif fires (pre-scheduled): "Peak export window opening at 5:00 PM. Battery at 87%. Expected earnings $18.40 over next 4 hours."
-Tap notif → hourly plan view. Show the exact minute-by-minute recommendation for the next 24hr.
-
-**02:30–02:45 — Back to Orthogonal, one more time**
-Quick cut back to the ticker from the intro. "Everything you just saw — the ROI in Mode A, the live rate feeds in Mode B — is eight to ten APIs, one SDK, one bill. That's why we built this on Orthogonal."
-
-**02:45–03:00 — The business**
-"Residential solar CAC is $2,000 to $4,000 per customer. We're a lead gen layer for installers at a fraction of that, plus a $10/month SaaS for existing battery owners in California alone — a million homes and growing. And every flipped household is 12 tons of CO2 over 25 years."
+See `VIDEO_SCRIPT.md` at the repo root for the shooting script. It's the canonical 3-minute Devpost video: Orthogonal as the hero, ZenPower + Marimo as credibility, AWS as the ship vehicle, with a 15-second business close.
 
 ---
 

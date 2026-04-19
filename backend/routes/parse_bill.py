@@ -18,6 +18,7 @@ from __future__ import annotations
 import base64
 import json
 import re
+from typing import Final
 
 import anthropic
 from fastapi import APIRouter, UploadFile
@@ -44,6 +45,28 @@ _EXTRACTION_SCHEMA = {
     "utility": "one of: PGE | SCE | SDGE | LADWP | OTHER",
     "tariff_plan": "string | null — e.g. 'EV2-A', 'E-TOU-C', 'TOU-D-PRIME', 'EV-TOU-5'",
 }
+_UTILITY_MARKERS: Final[tuple[tuple[UtilityCode, tuple[str, ...]], ...]] = (
+    ("PGE", ("PG&E", "PGE", "PACIFIC GAS")),
+    ("SCE", ("SCE", "SOUTHERN CALIFORNIA EDISON")),
+    ("SDGE", ("SDG&E", "SDGE", "SAN DIEGO GAS")),
+    ("LADWP", ("LADWP", "LOS ANGELES DEPARTMENT OF WATER")),
+)
+_KWH_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
+    re.compile(
+        r"(?:total\s+usage|usage\s+this\s+period|total\s+kwh)[:\s]*([\d,]+(?:\.\d+)?)",
+        re.IGNORECASE,
+    ),
+    re.compile(r"([\d,]+(?:\.\d+)?)\s*kwh", re.IGNORECASE),
+)
+_PLAN_PATTERN = re.compile(
+    r"\b(EV2-A|E-TOU-C|TOU-D-PRIME|EV-TOU-5|E-1|R-1A)\b",
+    re.IGNORECASE,
+)
+_CODE_FENCE_PREFIX_PATTERN = re.compile(r"^```(?:json)?\s*", re.IGNORECASE)
+_CODE_FENCE_SUFFIX_PATTERN = re.compile(r"\s*```$", re.IGNORECASE)
+
+_claude_client: anthropic.AsyncAnthropic | None = None
+_claude_client_api_key: str | None = None
 
 
 def _default_result() -> ParseBillResult:
@@ -65,15 +88,48 @@ def _normalize_utility(val: str | None) -> UtilityCode:
     return "OTHER"
 
 
+def _get_claude_client() -> anthropic.AsyncAnthropic | None:
+    global _claude_client, _claude_client_api_key
+    api_key = settings.anthropic_api_key
+    if not api_key:
+        return None
+    if _claude_client is None or _claude_client_api_key != api_key:
+        _claude_client = anthropic.AsyncAnthropic(api_key=api_key)
+        _claude_client_api_key = api_key
+    return _claude_client
+
+
+def _strip_code_fences(text: str) -> str:
+    stripped = text.strip()
+    if not stripped.startswith("```"):
+        return stripped
+    stripped = _CODE_FENCE_PREFIX_PATTERN.sub("", stripped)
+    return _CODE_FENCE_SUFFIX_PATTERN.sub("", stripped)
+
+
+def _extract_kwh(text: str) -> float | None:
+    for pattern in _KWH_PATTERNS:
+        match = pattern.search(text)
+        if match is None:
+            continue
+        try:
+            kwh_val = float(match.group(1).replace(",", ""))
+        except ValueError:
+            continue
+        if 10 <= kwh_val <= 20_000:
+            return kwh_val
+    return None
+
+
 async def _parse_with_claude(pdf_bytes: bytes) -> ParseBillResult | None:
     """Send the PDF to Claude via the beta document content block.
 
     Returns ``None`` on any error so the caller can fall back.
     """
-    if not settings.anthropic_api_key:
+    client = _get_claude_client()
+    if client is None:
         return None
     try:
-        client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
         b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
         user_prompt = (
             "Extract the following fields from this utility bill and return "
@@ -106,10 +162,7 @@ async def _parse_with_claude(pdf_bytes: bytes) -> ParseBillResult | None:
             block.text for block in msg.content if getattr(block, "type", "") == "text"
         ).strip()
         # Tolerate a code-fence wrapper if Claude adds one despite instructions.
-        if text.startswith("```"):
-            text = re.sub(r"^```(?:json)?\s*", "", text)
-            text = re.sub(r"\s*```$", "", text)
-        data = json.loads(text)
+        data = json.loads(_strip_code_fences(text))
 
         kwh = data.get("monthly_kwh")
         if not isinstance(kwh, (int, float)) or kwh <= 0:
@@ -121,7 +174,7 @@ async def _parse_with_claude(pdf_bytes: bytes) -> ParseBillResult | None:
             utility=utility,
             tariff_guess=str(plan) if plan else None,
         )
-    except Exception:  # noqa: BLE001 — any failure means "fall back"
+    except Exception:
         return None
 
 
@@ -139,47 +192,26 @@ def _parse_with_pdfplumber(pdf_bytes: bytes) -> ParseBillResult | None:
 
         with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
             text = "\n".join((page.extract_text() or "") for page in pdf.pages)
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
 
     if not text:
         return None
 
     # kWh: look for "NNN kWh" or "Total Usage: NNN"
-    kwh_patterns = [
-        r"(?:total\s+usage|usage\s+this\s+period|total\s+kwh)[:\s]*([\d,]+(?:\.\d+)?)",
-        r"([\d,]+(?:\.\d+)?)\s*kwh",
-    ]
-    kwh_val = None
-    for pat in kwh_patterns:
-        m = re.search(pat, text, re.IGNORECASE)
-        if m:
-            try:
-                kwh_val = float(m.group(1).replace(",", ""))
-                if 10 <= kwh_val <= 20000:
-                    break
-                kwh_val = None
-            except ValueError:
-                continue
+    kwh_val = _extract_kwh(text)
     if kwh_val is None:
         return None
 
     # Utility detection
     text_upper = text.upper()
     utility: UtilityCode = "OTHER"
-    for candidate, codes in [
-        ("PGE", ["PG&E", "PGE", "PACIFIC GAS"]),
-        ("SCE", ["SCE", "SOUTHERN CALIFORNIA EDISON"]),
-        ("SDGE", ["SDG&E", "SDGE", "SAN DIEGO GAS"]),
-        ("LADWP", ["LADWP", "LOS ANGELES DEPARTMENT OF WATER"]),
-    ]:
+    for candidate, codes in _UTILITY_MARKERS:
         if any(s in text_upper for s in codes):
-            utility = candidate  # type: ignore[assignment]
+            utility = candidate
             break
 
-    plan_match = re.search(
-        r"\b(EV2-A|E-TOU-C|TOU-D-PRIME|EV-TOU-5|E-1|R-1A)\b", text, re.IGNORECASE
-    )
+    plan_match = _PLAN_PATTERN.search(text)
     plan = plan_match.group(1).upper() if plan_match else None
     return ParseBillResult(
         monthly_kwh=float(kwh_val),

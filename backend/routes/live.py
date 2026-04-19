@@ -18,12 +18,13 @@ from schemas import LiveRecommendation, LiveStateRequest
 
 logger = logging.getLogger("helios.routes.live")
 router = APIRouter()
+optional_user_dep = Depends(get_optional_user)
 
 
 @router.post("/live", response_model=LiveRecommendation)
 async def post_live(
     req: LiveStateRequest,
-    user: User | None = Depends(get_optional_user),
+    user: User | None = optional_user_dep,
 ) -> LiveRecommendation:
     if user is not None:
         logger.info("live request user_id=%s", user.id)

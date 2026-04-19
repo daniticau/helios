@@ -16,7 +16,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from orthogonal_client import close as close_orthogonal
-from routes import live, parse_bill, roi, zenpower as zp_routes
+from routes import live, parse_bill, roi
+from routes import zenpower as zp_routes
 from zenpower import ZenPowerIndex
 
 

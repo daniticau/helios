@@ -118,16 +118,26 @@ export function LiveDashboard() {
             </View>
 
             <View style={styles.callsCard}>
-              <Text style={styles.callsHeader}>Live data sources</Text>
-              {rec.orthogonal_calls_made.map((c, i) => (
-                <Text key={i} style={styles.callLine}>
-                  {c.status === 'success' ? '✓' : c.status === 'cached' ? '•' : '✗'}  {c.api} — {c.purpose} ({c.latency_ms}ms)
-                </Text>
-              ))}
+              <Text style={styles.callsHeader}>live data sources</Text>
+              {rec.orthogonal_calls_made.map((c, i) => {
+                const dotColor =
+                  c.status === 'success'
+                    ? COLORS.green
+                    : c.status === 'cached'
+                      ? COLORS.blue
+                      : COLORS.red;
+                return (
+                  <View key={i} style={styles.callRow}>
+                    <View style={[styles.callDot, { backgroundColor: dotColor }]} />
+                    <Text style={styles.callName}>{c.api}</Text>
+                    <Text style={styles.callLatency}>{c.latency_ms}ms</Text>
+                  </View>
+                );
+              })}
             </View>
 
             <Text style={styles.footerHint}>
-              Auto-refreshes every 60 seconds. Pull down to refresh now.
+              Auto-refreshes every 60s. Pull to refresh.
             </Text>
           </>
         )}
@@ -149,13 +159,13 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 4 },
   subtitle: {
     color: COLORS.accent,
-    fontSize: 11,
+    fontSize: 12,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     marginBottom: 2,
   },
   title: { color: COLORS.text, fontSize: 24, fontWeight: '700' },
-  meta: { color: COLORS.textDim, fontSize: 12, marginTop: 2 },
+  meta: { color: COLORS.textDim, fontSize: 13, marginTop: 2 },
   gear: {
     width: 44,
     height: 44,
@@ -212,11 +222,33 @@ const styles = StyleSheet.create({
   },
   callsHeader: {
     color: COLORS.textMuted,
-    fontSize: 10,
+    fontSize: 12,
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 6,
+    letterSpacing: 1.2,
+    marginBottom: 10,
   },
-  callLine: { color: '#9ec1ff', fontSize: 11, fontFamily: 'Menlo' },
-  footerHint: { color: COLORS.textDim, fontSize: 11, textAlign: 'center', marginTop: 8 },
+  callRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    gap: 10,
+  },
+  callDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  callName: {
+    flex: 1,
+    color: COLORS.text,
+    fontSize: 13,
+  },
+  callLatency: {
+    color: COLORS.accent,
+    opacity: 0.8,
+    fontSize: 12,
+    fontFamily: 'Menlo',
+    fontVariant: ['tabular-nums'],
+  },
+  footerHint: { color: COLORS.textDim, fontSize: 12, textAlign: 'center', marginTop: 8 },
 });

@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from typing import Any
 
 
 class TTLCache:
-    def __init__(self) -> None:
+    def __init__(self, *, clock: Callable[[], float] = time.monotonic) -> None:
+        self._clock = clock
         self._store: dict[str, tuple[float, Any]] = {}
 
     def get(self, key: str) -> Any | None:
@@ -15,13 +17,13 @@ class TTLCache:
         if entry is None:
             return None
         expires_at, value = entry
-        if time.time() > expires_at:
+        if self._clock() >= expires_at:
             self._store.pop(key, None)
             return None
         return value
 
     def set(self, key: str, value: Any, ttl_seconds: float) -> None:
-        self._store[key] = (time.time() + ttl_seconds, value)
+        self._store[key] = (self._clock() + ttl_seconds, value)
 
     def clear(self) -> None:
         self._store.clear()

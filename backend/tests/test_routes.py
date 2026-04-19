@@ -11,7 +11,6 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-
 SAMPLE_PROFILE = {
     "address": "9500 Gilman Dr, La Jolla, CA, 92093, US",
     "lat": 32.8801,
@@ -205,12 +204,14 @@ def test_parse_bill_claude_returns_none_falls_back_to_default(
     def _fake_pdfplumber(pdf_bytes: bytes):
         return None
 
-    with patch("routes.parse_bill._parse_with_claude", side_effect=_fake):
-        with patch("routes.parse_bill._parse_with_pdfplumber", side_effect=_fake_pdfplumber):
-            resp = test_client.post(
-                "/api/parse-bill",
-                files={"file": ("bill.pdf", minimal_pdf, "application/pdf")},
-            )
+    with (
+        patch("routes.parse_bill._parse_with_claude", side_effect=_fake),
+        patch("routes.parse_bill._parse_with_pdfplumber", side_effect=_fake_pdfplumber),
+    ):
+        resp = test_client.post(
+            "/api/parse-bill",
+            files={"file": ("bill.pdf", minimal_pdf, "application/pdf")},
+        )
     assert resp.status_code == 200
     data = resp.json()
     assert data["monthly_kwh"] == 650.0

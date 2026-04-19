@@ -98,7 +98,6 @@ export function BreakdownCard({
         <BreakdownRow
           label="Financing APR"
           value={`${(financeMin * 100).toFixed(1)} – ${(financeMax * 100).toFixed(1)}%`}
-          sub="solar loan market range"
         />
         {roiPctOfHomeValue != null && (
           <BreakdownRow
@@ -135,8 +134,8 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    letterSpacing: 2,
+    fontSize: 12,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
     fontFamily: mono,
     marginBottom: spacing.sm,
@@ -156,9 +155,9 @@ const styles = StyleSheet.create({
   },
   sub: {
     color: colors.textDim,
-    fontSize: fontSizes.xs,
+    fontSize: 12,
     fontFamily: mono,
-    marginTop: 1,
+    marginTop: 2,
   },
   value: {
     color: colors.text,

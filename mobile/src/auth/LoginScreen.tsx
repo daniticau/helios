@@ -138,7 +138,7 @@ export function LoginScreen({ onDone }: { onDone?: () => void }) {
           {!isSupabaseConfigured && (
             <View style={styles.warn}>
               <Text style={styles.warnText}>
-                auth placeholder — SUPABASE env vars not set.
+                auth placeholder. SUPABASE env vars not set.
               </Text>
             </View>
           )}
@@ -157,7 +157,7 @@ export function LoginScreen({ onDone }: { onDone?: () => void }) {
 
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or email</Text>
+            <Text style={styles.dividerText}>or</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -230,13 +230,13 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontSize: fontSizes.md,
     fontWeight: '700',
-    letterSpacing: 4,
+    letterSpacing: 2,
     textTransform: 'lowercase',
   },
   eyebrow: {
     color: colors.textDim,
-    fontSize: fontSizes.xs,
-    letterSpacing: 3,
+    fontSize: 12,
+    letterSpacing: 1.2,
     fontFamily: mono,
     textTransform: 'uppercase',
     marginTop: spacing.sm,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   warnText: {
     color: colors.warning,
     fontFamily: mono,
-    fontSize: fontSizes.xs,
+    fontSize: 12,
   },
   ghostButton: {
     borderWidth: 1,
@@ -290,8 +290,8 @@ const styles = StyleSheet.create({
   dividerText: {
     color: colors.textDim,
     fontFamily: mono,
-    fontSize: 10,
-    letterSpacing: 2,
+    fontSize: 11.5,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
   formGroup: {
@@ -299,8 +299,8 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    letterSpacing: 2,
+    fontSize: 12,
+    letterSpacing: 1.2,
     fontFamily: mono,
     textTransform: 'uppercase',
   },
@@ -325,8 +325,8 @@ const styles = StyleSheet.create({
   sentTitle: {
     color: colors.success,
     fontFamily: mono,
-    fontSize: fontSizes.xs,
-    letterSpacing: 2,
+    fontSize: 12,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
   sentBody: {
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   cancelText: {
     color: colors.textDim,
     fontFamily: mono,
-    fontSize: fontSizes.xs,
+    fontSize: 12,
   },
   signedInWrap: {
     flex: 1,

@@ -1,8 +1,8 @@
 'use client';
 
-// Credentials terminal. Magic link + GitHub OAuth via Supabase. When
-// Supabase isn't configured, surface a placeholder banner but keep the
-// layout and copy present — auth handlers are no-ops.
+// Magic link + GitHub OAuth via Supabase. When Supabase isn't configured,
+// surface a placeholder banner but keep the layout present — auth handlers
+// are no-ops.
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -101,11 +101,8 @@ function LoginForm() {
       <main className="relative mx-auto flex max-w-[1280px] flex-col px-6 py-16 lg:flex-row lg:items-start lg:gap-20 lg:py-28">
         {/* LEFT — editorial */}
         <div className="lg:w-[44%] lg:sticky lg:top-28 lg:self-start">
-          <div
-            className="text-[10.5px] uppercase tracking-[0.32em] text-[color:var(--color-accent)]"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
-            // access · credentials
+          <div className="type-eyebrow type-eyebrow-accent">
+            access · credentials
           </div>
           <h1
             className="mt-5 type-display-soft text-[color:var(--color-text)]"
@@ -117,55 +114,21 @@ function LoginForm() {
             </span>
           </h1>
           <p className="mt-5 max-w-md text-[16px] leading-[1.65] text-[color:var(--color-text-muted)]">
-            Anonymous runs always work — no signup required. Sign in to keep a
+            Anonymous runs always work, no signup required. Sign in to keep a
             history across web and mobile, save named scenarios, and share them.
           </p>
-
-          <div
-            className="mt-10 space-y-3 border-l border-[color:var(--color-border)] pl-5 text-[11px] uppercase tracking-[0.24em] text-[color:var(--color-text-dim)]"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
-            <div>
-              <span className="text-[color:var(--color-accent)]">◇</span> supabase ·
-              publishable + secret keys
-            </div>
-            <div>
-              <span className="text-[color:var(--color-accent)]">◇</span> asymmetric
-              jwt · ES256 · JWKS
-            </div>
-            <div>
-              <span className="text-[color:var(--color-accent)]">◇</span> anonymous
-              access · preserved
-            </div>
-          </div>
         </div>
 
-        {/* RIGHT — terminal credentials */}
+        {/* RIGHT — credentials */}
         <div className="mt-12 w-full lg:mt-0 lg:flex-1">
           <div className="overflow-hidden rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card)]/60 shadow-[0_30px_90px_-30px_rgba(0,0,0,0.8)]">
-            {/* chrome */}
-            <div
-              className="flex items-center justify-between border-b border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/50 px-5 py-3 text-[10px] uppercase tracking-[0.28em]"
-              style={{ fontFamily: 'var(--font-mono)' }}
-            >
-              <div className="flex items-center gap-2 text-[color:var(--color-accent)]">
-                <span
-                  className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-accent)]"
-                  style={{ boxShadow: '0 0 5px rgba(245,215,110,0.8)' }}
-                />
-                auth.helios
-              </div>
-              <span className="text-[color:var(--color-text-dim)]">v0 · mainline</span>
-            </div>
-
-            <div className="px-7 py-8 sm:px-10">
+            <div className="px-7 py-8 sm:px-10 sm:py-10">
               {!configured && (
                 <div
-                  className="mb-7 rounded-sm border border-[color:var(--color-warning)]/40 bg-[color:var(--color-bg-deep)]/50 px-4 py-3 text-[11px] uppercase tracking-[0.22em] text-[color:var(--color-warning)]"
+                  className="mb-7 rounded-sm border border-[color:var(--color-warning)]/40 bg-[color:var(--color-bg-deep)]/50 px-4 py-3 text-[12px] text-[color:var(--color-warning)]"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
-                  ⚠ placeholder mode — NEXT_PUBLIC_SUPABASE_* unset. see
-                  docs/DEPLOY.md
+                  ⚠ placeholder mode. NEXT_PUBLIC_SUPABASE_* unset. See docs/DEPLOY.md.
                 </div>
               )}
 
@@ -173,7 +136,7 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={handleGithub}
-                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)]/70 px-6 py-4 text-[12.5px] uppercase tracking-[0.26em] text-[color:var(--color-text)] transition hover:border-[color:var(--color-accent)]"
+                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-card-elevated)]/70 px-6 py-4 text-[12.5px] uppercase tracking-[0.18em] text-[color:var(--color-text)] transition hover:border-[color:var(--color-accent)]"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
                 <svg className="relative z-10 h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -190,10 +153,10 @@ function LoginForm() {
               <div className="my-7 flex items-center gap-3">
                 <div className="h-px flex-1 bg-[color:var(--color-border)]" />
                 <span
-                  className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--color-text-dim)]"
+                  className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--color-text-dim)]"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
-                  or · email
+                  or
                 </span>
                 <div className="h-px flex-1 bg-[color:var(--color-border)]" />
               </div>
@@ -204,57 +167,45 @@ function LoginForm() {
                   className="rounded-sm border border-[color:var(--color-success)]/40 bg-[color:var(--color-card)]/60 p-5"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
-                  <div className="text-[10.5px] uppercase tracking-[0.3em] text-[color:var(--color-success)]">
-                    ✓ magic link sent
+                  <div className="type-eyebrow" style={{ color: 'var(--color-success)' }}>
+                    magic link sent
                   </div>
                   <div className="mt-2 text-[14px] text-[color:var(--color-text)]">
-                    check <span className="text-[color:var(--color-accent)]">{email}</span>{' '}
+                    Check <span className="text-[color:var(--color-accent)]">{email}</span>{' '}
                     for a link to sign in.
                   </div>
                 </div>
               ) : (
                 <form onSubmit={handleMagicLink} className="space-y-3">
-                  <div
-                    className="flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-[color:var(--color-text-muted)]"
+                  {/* Label text is literally "email" so Playwright's
+                      getByLabel(/^email$/) matches without whitespace noise. */}
+                  <label htmlFor="email" className="type-label block">
+                    email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    // Explicit aria-label guarantees the accessible name is
+                    // exactly "email" regardless of how the visual label
+                    // resolves through the a11y tree — so Playwright's
+                    // getByLabel(/^email$/) is deterministic.
+                    aria-label="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@domain.com"
+                    className="w-full rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/50 px-4 py-3.5 text-[14px] text-[color:var(--color-text)] placeholder:text-[color:var(--color-text-dim)] focus:border-[color:var(--color-accent)] focus:outline-none"
                     style={{ fontFamily: 'var(--font-mono)' }}
-                  >
-                    <span aria-hidden="true" className="text-[color:var(--color-accent)]">▸</span>
-                    {/* Label text is literally "email" so Playwright's
-                        getByLabel(/^email$/) matches without whitespace noise. */}
-                    <label htmlFor="email">email</label>
-                  </div>
-                  <div className="relative">
-                    <span
-                      className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--color-accent)]"
-                      style={{ fontFamily: 'var(--font-mono)' }}
-                    >
-                      @
-                    </span>
-                    <input
-                      id="email"
-                      type="email"
-                      // Explicit aria-label guarantees the accessible name is
-                      // exactly "email" regardless of how the visual label
-                      // resolves through the a11y tree — so Playwright's
-                      // getByLabel(/^email$/) is deterministic.
-                      aria-label="email"
-                      required
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@domain.com"
-                      className="w-full rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-bg-deep)]/50 py-3.5 pl-10 pr-4 text-[14px] text-[color:var(--color-text)] placeholder:text-[color:var(--color-text-dim)] focus:border-[color:var(--color-accent)] focus:outline-none"
-                      style={{ fontFamily: 'var(--font-mono)' }}
-                    />
-                  </div>
+                  />
                   <button
                     type="submit"
                     disabled={status === 'sending'}
-                    className="group relative flex w-full items-center justify-between overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-6 py-3.5 text-[12.5px] font-semibold uppercase tracking-[0.26em] text-[color:var(--color-bg)] disabled:opacity-40"
+                    className="group relative flex w-full items-center justify-between overflow-hidden rounded-sm bg-[color:var(--color-accent)] px-6 py-3.5 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-bg)] disabled:opacity-40"
                     style={{ fontFamily: 'var(--font-mono)' }}
                   >
                     <span className="relative z-10">
-                      {status === 'sending' ? 'sending · · ·' : 'send · magic link'}
+                      {status === 'sending' ? 'sending…' : 'send magic link'}
                     </span>
                     <span className="relative z-10 text-lg">→</span>
                     <span className="absolute inset-0 -translate-x-full bg-[color:var(--color-accent-warm)] transition-transform duration-500 group-enabled:group-hover:translate-x-0" />
@@ -264,23 +215,17 @@ function LoginForm() {
 
               {error && (
                 <div
-                  className="mt-5 rounded-sm border border-[color:var(--color-error)]/40 bg-[color:var(--color-card)]/60 p-3 text-[11.5px] text-[color:var(--color-error)]"
+                  className="mt-5 rounded-sm border border-[color:var(--color-error)]/40 bg-[color:var(--color-card)]/60 p-3 text-[12px] text-[color:var(--color-error)]"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   ⚠ {error}
                 </div>
               )}
 
-              <div className="mt-10 flex items-center justify-between border-t border-[color:var(--color-hairline)] pt-5">
-                <span
-                  className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--color-text-dim)]"
-                  style={{ fontFamily: 'var(--font-mono)' }}
-                >
-                  skip · guest mode
-                </span>
+              <div className="mt-10 flex items-center justify-end border-t border-[color:var(--color-hairline)] pt-5">
                 <Link
                   href="/install"
-                  className="text-[11.5px] uppercase tracking-[0.26em] text-[color:var(--color-text)] hover:text-[color:var(--color-accent)]"
+                  className="text-[12px] uppercase tracking-[0.18em] text-[color:var(--color-text-muted)] hover:text-[color:var(--color-accent)]"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   continue without signing in →
