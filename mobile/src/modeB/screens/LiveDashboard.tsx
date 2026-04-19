@@ -85,7 +85,7 @@ export function LiveDashboard() {
             style={styles.gear}
             hitSlop={12}
           >
-            <Text style={styles.gearText}>⚙</Text>
+            <Text style={styles.gearText}>settings</Text>
           </Pressable>
         </View>
 
@@ -201,14 +201,20 @@ const styles = StyleSheet.create({
   title: { color: COLORS.text, fontSize: 24, fontWeight: '700' },
   meta: { color: COLORS.textDim, fontSize: 13, marginTop: 2 },
   gear: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    height: 32,
+    paddingHorizontal: 14,
+    borderRadius: 8,
     backgroundColor: COLORS.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  gearText: { color: COLORS.textMuted, fontSize: 20 },
+  gearText: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
   loadingCard: {
     backgroundColor: COLORS.card,
     padding: 40,

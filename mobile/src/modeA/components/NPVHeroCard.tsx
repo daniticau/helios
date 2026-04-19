@@ -4,7 +4,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { colors, fontSizes, mono, radius, spacing } from '../theme';
+import { colors, fonts, fontSizes, mono, radius, spacing } from '../theme';
 
 interface NPVHeroCardProps {
   paybackYears: number;
@@ -66,16 +66,16 @@ const styles = StyleSheet.create({
   },
   paybackNumber: {
     color: colors.accent,
+    fontFamily: fonts.display,
     fontSize: 96,
     lineHeight: 98,
-    fontWeight: '700',
     letterSpacing: -3,
     fontVariant: ['tabular-nums'],
   },
   paybackUnit: {
     color: colors.accent,
+    fontFamily: fonts.displaySoft,
     fontSize: fontSizes.xl,
-    fontWeight: '600',
     marginLeft: spacing.sm,
     marginBottom: 18,
     letterSpacing: -0.5,
@@ -95,8 +95,8 @@ const styles = StyleSheet.create({
   },
   npvValue: {
     color: colors.text,
+    fontFamily: fonts.displaySoft,
     fontSize: fontSizes.hero - 6,
-    fontWeight: '700',
     letterSpacing: -1.5,
     marginTop: 2,
     fontVariant: ['tabular-nums'],

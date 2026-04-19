@@ -75,6 +75,7 @@ export function ROIResult({ route, navigation }: ModeAScreenProps<'ROIResult'>) 
             netUpfrontUsd={result.net_upfront_usd}
             installerQuotesRange={result.installer_quotes_range}
             financingAprRange={result.financing_apr_range}
+            fallbacksUsed={result.fallbacks_used}
           />
         </Animated.View>
 
@@ -84,6 +85,7 @@ export function ROIResult({ route, navigation }: ModeAScreenProps<'ROIResult'>) 
             co2AvoidedTons25yr={result.co2_avoided_tons_25yr}
             socialCostOfCarbonUsd={result.social_cost_of_carbon_usd}
             roiPctOfHomeValue={result.roi_pct_of_home_value}
+            fallbacksUsed={result.fallbacks_used}
           />
         </Animated.View>
 

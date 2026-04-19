@@ -6,6 +6,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { LiveAction } from '@/shared/types';
 
+import { fonts } from '../../modeA/theme';
 import { COLORS } from '../constants';
 
 interface Props {
@@ -32,8 +33,7 @@ export function RateCompare({ retailRate, exportRate, action }: Props) {
 
   const spread = hero - compare;
   const spreadPct = hero > 0 ? (spread / hero) * 100 : 0;
-  const arrow = spread >= 0 ? '↗' : '↘';
-  const arrowColor = spread >= 0 ? COLORS.accent : COLORS.textMuted;
+  const spreadColor = spread >= 0 ? COLORS.accent : COLORS.textMuted;
 
   const barPct = Math.max(
     0,
@@ -57,8 +57,8 @@ export function RateCompare({ retailRate, exportRate, action }: Props) {
         <View style={styles.compareCol}>
           <Text style={styles.compareLabel}>{compareLabel}</Text>
           <Text style={styles.compareValue}>{fmt(compare)}</Text>
-          <Text style={[styles.spread, { color: arrowColor }]}>
-            {arrow} {spreadPrefix}
+          <Text style={[styles.spread, { color: spreadColor }]}>
+            {spreadPrefix}
             {fmt(Math.abs(spread))} · {spreadPrefix}
             {Math.abs(spreadPct).toFixed(0)}%
           </Text>
@@ -98,6 +98,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
+    fontFamily: fonts.mono,
   },
   mainRow: {
     flexDirection: 'row',
@@ -114,6 +115,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
+    fontFamily: fonts.mono,
   },
   heroValueRow: {
     flexDirection: 'row',
@@ -122,13 +124,15 @@ const styles = StyleSheet.create({
   },
   heroValue: {
     color: COLORS.text,
-    fontSize: 44,
-    fontWeight: '800',
-    letterSpacing: -1,
+    fontFamily: fonts.display,
+    fontSize: 48,
+    letterSpacing: -1.5,
+    fontVariant: ['tabular-nums'],
   },
   heroUnit: {
     color: COLORS.textMuted,
     fontSize: 14,
+    fontFamily: fonts.mono,
   },
   compareCol: {
     alignItems: 'flex-end',
@@ -140,14 +144,17 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
+    fontFamily: fonts.mono,
   },
   compareValue: {
     color: COLORS.textMuted,
     fontSize: 20,
+    fontFamily: fonts.mono,
     fontVariant: ['tabular-nums'],
   },
   spread: {
     fontSize: 12,
+    fontFamily: fonts.mono,
     fontVariant: ['tabular-nums'],
   },
   bars: {
@@ -173,5 +180,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textTransform: 'uppercase',
     letterSpacing: 1,
+    fontFamily: fonts.mono,
   },
 });

@@ -3,7 +3,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { ProposedSystem } from '@/shared/types';
-import { colors, fontSizes, mono, radius, spacing } from '../theme';
+import { colors, fonts, fontSizes, mono, radius, spacing } from '../theme';
 
 interface SystemSizeCardProps {
   system: ProposedSystem;
@@ -65,8 +65,8 @@ const styles = StyleSheet.create({
   },
   value: {
     color: colors.accent,
+    fontFamily: fonts.display,
     fontSize: fontSizes.xl,
-    fontWeight: '700',
     letterSpacing: -0.5,
     fontVariant: ['tabular-nums'],
   },

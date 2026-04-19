@@ -37,15 +37,16 @@ export function PeakWindowBanner({ peak }: Props) {
       }}
     >
       <span
-        className="flex h-8 w-8 items-center justify-center rounded-sm"
+        className="flex h-8 items-center justify-center rounded-sm px-2 text-[10px] uppercase tracking-[0.14em]"
         style={{
           backgroundColor: 'rgba(245, 215, 110, 0.18)',
           color: 'var(--color-accent)',
-          fontSize: 16,
+          fontFamily: 'var(--font-mono)',
+          fontWeight: 600,
         }}
         aria-hidden
       >
-        ⚡
+        peak
       </span>
       <div className="min-w-0 flex-1">
         <div className="text-[14px] font-semibold text-[color:var(--color-accent)]">

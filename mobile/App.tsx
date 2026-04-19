@@ -6,6 +6,22 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
+import {
+  Fraunces_600SemiBold,
+  Fraunces_700Bold,
+} from '@expo-google-fonts/fraunces';
+import {
+  InterTight_400Regular,
+  InterTight_500Medium,
+  InterTight_600SemiBold,
+} from '@expo-google-fonts/inter-tight';
+import {
+  JetBrainsMono_500Medium,
+  JetBrainsMono_700Bold,
+} from '@expo-google-fonts/jetbrains-mono';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -20,6 +36,11 @@ import { OnboardUtility } from '@/modeA/screens/OnboardUtility';
 import { ROIResult } from '@/modeA/screens/ROIResult';
 import { colors } from '@/modeA/theme';
 import { AnimatedTabBar } from '@/shared/components/AnimatedTabBar';
+
+// Keep the native splash visible while @expo-google-fonts resolves — no
+// font-swap flash when the JS bundle first paints. `preventAutoHideAsync`
+// must fire at module load so it wins the race against React rendering.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -71,13 +92,33 @@ function ModeAStack() {
   );
 }
 
-// Tiny "Account" tab. Hosts login/signed-in state. Anonymous demo flow
+// Tiny "Account" tab. Hosts login/signed-in state. Anonymous use
 // continues to work — this is purely additive.
 function AccountTab() {
   return <LoginScreen />;
 }
 
 export default function App() {
+  const [fontsLoaded, fontError] = useFonts({
+    Fraunces_600SemiBold,
+    Fraunces_700Bold,
+    InterTight_400Regular,
+    InterTight_500Medium,
+    InterTight_600SemiBold,
+    JetBrainsMono_500Medium,
+    JetBrainsMono_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  // Render nothing until fonts resolve — the native splash covers the gap
+  // and the whole UI paints once in its final typography.
+  if (!fontsLoaded && !fontError) return null;
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>

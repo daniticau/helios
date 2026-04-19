@@ -1,8 +1,10 @@
-// Mode B constants — demo profile for the "existing owner" narrative
-// and color tokens for action states.
-// Per HELIOS.md §11 demo script, Tijuana hills, 8kW + Powerwall (13.5 kWh).
+// Mode B constants — first-run profile for the existing-owner dashboard
+// and color tokens for action states. Palette mirrors modeA/theme.ts so
+// both modes and the web app share a single visual language.
 
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+
+import { fonts } from '../modeA/theme';
 import type { LiveAction, UserProfile } from '@/shared/types';
 
 export const DEMO_PROFILE_EXISTING_OWNER: UserProfile = {
@@ -20,30 +22,31 @@ export const DEMO_PROFILE_EXISTING_OWNER: UserProfile = {
   battery_max_kw: 5,
 };
 
-// Dark theme tokens. Match App.tsx: bg #1a1a1a, card #242424, accent #f5d76e.
+// Dark theme tokens. Match modeA/theme.ts colors exactly so cross-mode
+// components render identically. Action-state shortcuts (green/yellow/
+// blue/red/gray) are semantic aliases for the core palette.
 export const COLORS = {
   bg: '#1a1a1a',
-  card: '#242424',
-  cardAlt: '#2a2a2a',
-  border: '#333',
-  text: '#ffffff',
-  textMuted: '#aaa',
-  textDim: '#666',
+  card: '#1f1e1a',
+  cardAlt: '#25241f',
+  border: '#2f2d27',
+  text: '#f5f3ea',
+  textMuted: '#a39f94',
+  textDim: '#635f56',
   accent: '#f5d76e',
-  // action state colors per workstream spec
-  green: '#4ade80', // discharge-to-grid / money in
-  yellow: '#fbbf24', // charge-from-grid
-  gray: '#6b7280', // hold
-  blue: '#60a5fa', // solar ops (export-solar, charge-from-solar)
-  red: '#f87171', // errors / warnings
-  peak: 'rgba(245, 215, 110, 0.18)', // peak window shade
+  // action state colors (aliases over the core palette)
+  green: '#87d67d',
+  yellow: '#e0a93a',
+  gray: '#6b7280',
+  blue: '#8db4dc',
+  red: '#e84a45',
+  peak: 'rgba(245, 215, 110, 0.18)',
 } as const;
 
-// Map LiveAction → (label, color, glyph) for UI.
+// Map LiveAction → display metadata for UI.
 export interface ActionMeta {
   label: string;
   color: string;
-  glyph: string; // simple ascii/emoji-ish glyph for header visuals
   verb: string; // short imperative for widget
 }
 
@@ -51,49 +54,36 @@ export const ACTION_META: Record<LiveAction, ActionMeta> = {
   DISCHARGE_BATTERY_TO_GRID: {
     label: 'Sell battery to grid',
     color: COLORS.green,
-    glyph: '↗',
     verb: 'Sell Now',
   },
   DISCHARGE_BATTERY_TO_HOUSE: {
     label: 'Power house from battery',
     color: COLORS.green,
-    glyph: '→',
     verb: 'Power Home',
   },
   CHARGE_BATTERY_FROM_GRID: {
     label: 'Charge battery from grid',
     color: COLORS.yellow,
-    glyph: '↘',
     verb: 'Charging',
   },
   CHARGE_BATTERY_FROM_SOLAR: {
     label: 'Store solar in battery',
     color: COLORS.blue,
-    glyph: '☀',
     verb: 'Storing Solar',
   },
   EXPORT_SOLAR: {
     label: 'Export solar to grid',
     color: COLORS.blue,
-    glyph: '↗',
     verb: 'Exporting',
   },
   HOLD: {
     label: 'Hold, wait for better rates',
     color: COLORS.gray,
-    glyph: '•',
     verb: 'Holding',
   },
 };
 
 export const POLL_INTERVAL_MS = 60_000;
-
-// Monospace stack for latency numerals and any terminal-style copy.
-const mono = Platform.select({
-  ios: 'Menlo',
-  android: 'monospace',
-  default: 'Menlo',
-});
 
 // Shared label primitives, mirrors mobile/src/modeA/theme.ts.
 export const textStyles = StyleSheet.create({
@@ -102,7 +92,7 @@ export const textStyles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    fontFamily: mono,
+    fontFamily: fonts.mono,
     fontWeight: '500',
   },
   eyebrowAccent: {
@@ -110,7 +100,7 @@ export const textStyles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    fontFamily: mono,
+    fontFamily: fonts.mono,
     fontWeight: '500',
   },
   eyebrowDim: {
@@ -118,7 +108,7 @@ export const textStyles = StyleSheet.create({
     fontSize: 11.5,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    fontFamily: mono,
+    fontFamily: fonts.mono,
   },
   sectionLabel: {
     color: COLORS.textMuted,

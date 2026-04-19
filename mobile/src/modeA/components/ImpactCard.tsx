@@ -3,19 +3,24 @@
 
 import { StyleSheet, Text, View } from 'react-native';
 
+import { FallbackChip } from './FallbackChip';
 import { colors, fontSizes, mono, radius, spacing } from '../theme';
 
 interface Row {
   label: string;
   value: string;
   sub?: string;
+  fallback?: boolean;
 }
 
-function ImpactRow({ label, value, sub }: Row) {
+function ImpactRow({ label, value, sub, fallback }: Row) {
   return (
     <View style={styles.row}>
       <View style={{ flex: 1 }}>
-        <Text style={styles.label}>{label}</Text>
+        <View style={styles.labelRow}>
+          <Text style={styles.label}>{label}</Text>
+          {fallback ? <FallbackChip /> : null}
+        </View>
         {sub ? <Text style={styles.sub}>{sub}</Text> : null}
       </View>
       <Text style={styles.value}>{value}</Text>
@@ -28,6 +33,7 @@ interface Props {
   co2AvoidedTons25yr: number;
   socialCostOfCarbonUsd?: number;
   roiPctOfHomeValue?: number;
+  fallbacksUsed?: string[];
 }
 
 function usd(n: number): string {
@@ -39,11 +45,14 @@ export function ImpactCard({
   co2AvoidedTons25yr,
   socialCostOfCarbonUsd,
   roiPctOfHomeValue,
+  fallbacksUsed,
 }: Props) {
   const carbonDollarValue =
     socialCostOfCarbonUsd != null
       ? co2AvoidedTons25yr * socialCostOfCarbonUsd
       : null;
+  const propertyFallback = fallbacksUsed?.includes('property_value');
+  const carbonFallback = fallbacksUsed?.includes('carbon_price');
 
   return (
     <View style={styles.card}>
@@ -56,6 +65,7 @@ export function ImpactCard({
         <ImpactRow
           label="NPV as % of home value"
           value={`${roiPctOfHomeValue.toFixed(1)}%`}
+          fallback={propertyFallback}
         />
       ) : null}
       <View style={styles.divider} />
@@ -68,6 +78,7 @@ export function ImpactCard({
           label="At social cost of carbon"
           sub={`${usd(socialCostOfCarbonUsd!)}/ton`}
           value={`+${usd(carbonDollarValue)}`}
+          fallback={carbonFallback}
         />
       ) : null}
     </View>
@@ -95,6 +106,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 6,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
   },
   label: {
     color: colors.text,

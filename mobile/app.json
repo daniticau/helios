@@ -7,6 +7,7 @@
     "userInterfaceStyle": "automatic",
     "scheme": "helios",
     "newArchEnabled": true,
+    "icon": "./assets/icon.png",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.daniticau.helios",
@@ -26,7 +27,11 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f0f10"
+      }
     },
     "web": {
       "bundler": "metro"
@@ -35,6 +40,7 @@
       "expo-notifications",
       "expo-secure-store",
       "expo-asset",
+      "expo-font",
       "@bacons/apple-targets",
       [
         "expo-location",

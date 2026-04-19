@@ -31,8 +31,7 @@ export function RateCompare({ retailRate, exportRate, action }: Props) {
   // Spread: positive number = hero beats compare. Percent relative to hero.
   const spread = hero - compare;
   const spreadPct = hero > 0 ? (spread / hero) * 100 : 0;
-  const arrow = spread >= 0 ? '↗' : '↘';
-  const arrowColor = spread >= 0
+  const spreadColor = spread >= 0
     ? 'var(--color-accent)'
     : 'var(--color-text-muted)';
 
@@ -93,9 +92,8 @@ export function RateCompare({ retailRate, exportRate, action }: Props) {
           </div>
           <div
             className="flex items-center gap-1 text-[12px]"
-            style={{ fontFamily: 'var(--font-mono)', color: arrowColor }}
+            style={{ fontFamily: 'var(--font-mono)', color: spreadColor }}
           >
-            <span>{arrow}</span>
             <span className="tabular-nums">
               {spread >= 0 ? '+' : '−'}
               {fmtRate(Math.abs(spread))}

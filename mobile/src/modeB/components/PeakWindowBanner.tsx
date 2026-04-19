@@ -34,7 +34,7 @@ export function PeakWindowBanner({ peak }: Props) {
   return (
     <View style={styles.banner}>
       <View style={styles.iconWrap}>
-        <Text style={styles.icon}>⚡</Text>
+        <Text style={styles.iconLabel}>peak</Text>
       </View>
       <View style={styles.content}>
         <Text style={styles.title}>{label}</Text>
@@ -58,14 +58,20 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    height: 28,
+    paddingHorizontal: 10,
+    borderRadius: 6,
     backgroundColor: 'rgba(245, 215, 110, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: { fontSize: 18 },
+  iconLabel: {
+    color: COLORS.accent,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
   content: { flex: 1 },
   title: { color: COLORS.accent, fontSize: 15, fontWeight: '700' },
   subtitle: { color: COLORS.text, fontSize: 13, marginTop: 2 },

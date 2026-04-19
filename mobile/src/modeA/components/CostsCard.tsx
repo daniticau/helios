@@ -3,6 +3,7 @@
 
 import { StyleSheet, Text, View } from 'react-native';
 
+import { FallbackChip } from './FallbackChip';
 import { colors, fontSizes, mono, radius, spacing } from '../theme';
 
 interface Row {
@@ -11,13 +12,17 @@ interface Row {
   sub?: string;
   accent?: boolean;
   strike?: boolean;
+  fallback?: boolean;
 }
 
-function CostRow({ label, value, sub, accent, strike }: Row) {
+function CostRow({ label, value, sub, accent, strike, fallback }: Row) {
   return (
     <View style={styles.row}>
       <View style={{ flex: 1 }}>
-        <Text style={styles.label}>{label}</Text>
+        <View style={styles.labelRow}>
+          <Text style={styles.label}>{label}</Text>
+          {fallback ? <FallbackChip /> : null}
+        </View>
         {sub ? <Text style={styles.sub}>{sub}</Text> : null}
       </View>
       <Text
@@ -39,6 +44,7 @@ interface Props {
   netUpfrontUsd: number;
   installerQuotesRange: [number, number];
   financingAprRange: [number, number];
+  fallbacksUsed?: string[];
 }
 
 function usd(n: number): string {
@@ -51,9 +57,12 @@ export function CostsCard({
   netUpfrontUsd,
   installerQuotesRange,
   financingAprRange,
+  fallbacksUsed,
 }: Props) {
   const [quoteMin, quoteMax] = installerQuotesRange;
   const [financeMin, financeMax] = financingAprRange;
+  const pricingFallback = fallbacksUsed?.includes('installer_pricing');
+  const financingFallback = fallbacksUsed?.includes('financing');
   return (
     <View style={styles.card}>
       <Text style={styles.eyebrow}>what it costs</Text>
@@ -62,6 +71,7 @@ export function CostsCard({
         sub={`range ${usd(quoteMin)} – ${usd(quoteMax)}`}
         value={usd(upfrontCostUsd)}
         strike
+        fallback={pricingFallback}
       />
       <CostRow label="Federal ITC (30%)" value={`-${usd(federalItcUsd)}`} />
       <View style={styles.divider} />
@@ -69,6 +79,7 @@ export function CostsCard({
       <CostRow
         label="Financing APR"
         value={`${(financeMin * 100).toFixed(1)} – ${(financeMax * 100).toFixed(1)}%`}
+        fallback={financingFallback}
       />
     </View>
   );
@@ -95,6 +106,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 6,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
   },
   label: {
     color: colors.text,

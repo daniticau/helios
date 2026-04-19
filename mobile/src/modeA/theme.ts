@@ -1,27 +1,33 @@
-// Design tokens for Mode A — dark theme. See user global prefs:
-// bg is dark gray (#1a1a1a), not pure black. Monospace for agent output.
+// Design tokens for Mode A — dark theme. Ported from web/app/globals.css
+// so the mobile and web apps share one palette + typography. Any token
+// added here should mirror its web counterpart (see web `@theme` block).
 
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 export const colors = {
   bg: '#1a1a1a',
-  bgElevated: '#222222',
-  card: '#242424',
-  cardElevated: '#2a2a2a',
-  border: '#333333',
-  borderSubtle: '#2a2a2a',
+  bgDeep: '#0f0f10',
+  bgElevated: '#23221e',
+  card: '#1f1e1a',
+  cardElevated: '#25241f',
+  hairline: '#2a2824',
+  border: '#2f2d27',
+  borderSubtle: '#262420',
 
-  text: '#f5f5f5',
-  textMuted: '#9a9a9a',
-  textDim: '#6a6a6a',
+  text: '#f5f3ea',
+  textMuted: '#a39f94',
+  textDim: '#635f56',
+  textDimmer: '#3d3a35',
 
-  accent: '#f5d76e', // helios sun
+  accent: '#f5d76e', // helios sun (gold)
+  accentWarm: '#ffa940',
   accentDim: '#c4a94c',
+  accentCool: '#8db4dc',
 
-  success: '#4ade80', // green
-  warning: '#fbbf24', // amber
-  error: '#f87171', // soft red
-  info: '#60a5fa', // soft blue
+  success: '#87d67d',
+  warning: '#e0a93a',
+  error: '#e84a45',
+  info: '#6f9fd3',
   caret: '#f5d76e',
 } as const;
 
@@ -56,12 +62,20 @@ export const fontSizes = {
   hero: 56,
 } as const;
 
-// Monospace stack tuned for each platform. Looks like a terminal.
-export const mono = Platform.select({
-  ios: 'Menlo',
-  android: 'monospace',
-  default: 'Menlo',
-});
+// Font families. Values match the Google Fonts package exports loaded in
+// App.tsx via useFonts. `mono` stays as a named export for backwards
+// compatibility with existing call sites.
+export const fonts = {
+  display: 'Fraunces_700Bold',
+  displaySoft: 'Fraunces_600SemiBold',
+  mono: 'JetBrainsMono_500Medium',
+  monoBold: 'JetBrainsMono_700Bold',
+  body: 'InterTight_400Regular',
+  bodyMedium: 'InterTight_500Medium',
+  bodySemibold: 'InterTight_600SemiBold',
+} as const;
+
+export const mono = fonts.mono;
 
 // Shared label primitives. Replace ad-hoc eyebrows with these.
 export const textStyles = StyleSheet.create({
@@ -70,7 +84,7 @@ export const textStyles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    fontFamily: mono,
+    fontFamily: fonts.mono,
     fontWeight: '500',
   },
   eyebrowAccent: {
@@ -78,7 +92,7 @@ export const textStyles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    fontFamily: mono,
+    fontFamily: fonts.mono,
     fontWeight: '500',
   },
   eyebrowDim: {
@@ -86,12 +100,13 @@ export const textStyles = StyleSheet.create({
     fontSize: 11.5,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    fontFamily: mono,
+    fontFamily: fonts.mono,
   },
   sectionLabel: {
     color: colors.textMuted,
     fontSize: 13,
     letterSpacing: 0.4,
     fontWeight: '500',
+    fontFamily: fonts.bodyMedium,
   },
 });
